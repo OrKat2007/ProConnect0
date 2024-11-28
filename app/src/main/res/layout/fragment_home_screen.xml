@@ -22,7 +22,7 @@
             android:gravity="center"
             android:paddingLeft="30dp"
             android:paddingRight="30dp"
-            android:text="SHO SIGMA to ProConnect"
+            android:text="Laptop to ProConnect"
             android:textColor="@color/white"
             android:textSize="25dp"
             app:layout_constraintStart_toStartOf="parent"
