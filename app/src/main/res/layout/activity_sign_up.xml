@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/backgroundgray"
+    tools:context=".sign_up">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginStart="125dp"
+        android:layout_marginTop="48dp"
+        android:fontFamily="sans-serif-black"
+        android:gravity="center"
+        android:text="Sign Up"
+        android:textColor="#000000"
+        android:textSize="45dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/etUserName"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="55dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="username:"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <EditText
+        android:id="@+id/etPhone"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="62dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="phone number:"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPassWord" />
+
+    <EditText
+        android:id="@+id/etPassWord"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="60dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="password:"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etUserName" />
+
+    <Button
+        android:id="@+id/btnPro"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginStart="49dp"
+        android:layout_marginTop="60dp"
+        android:backgroundTint="#606060"
+        android:fontFamily="sans-serif-black"
+        android:text="professional"
+        android:textColor="@color/white"
+        android:textSize="17dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPhone" />
+
+    <Button
+        android:id="@+id/btnUser"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginStart="22dp"
+        android:layout_marginTop="60dp"
+        android:backgroundTint="#606060"
+        android:fontFamily="sans-serif-black"
+        android:text="normal user"
+        android:textColor="@color/white"
+        android:textSize="17dp"
+        app:layout_constraintStart_toEndOf="@+id/btnPro"
+        app:layout_constraintTop_toBottomOf="@+id/etPhone" />
+
+    <Button
+        android:id="@+id/btnLogIn"
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_marginStart="153dp"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#606060"
+        android:fontFamily="sans-serif-black"
+        android:text="sign up"
+        android:textColor="@color/white"
+        android:textSize="17dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnPro" />
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="109dp"
+        android:backgroundTint="#606060"
+        android:fontFamily="sans-serif-black"
+        android:text="back"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnPro" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

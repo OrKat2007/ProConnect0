@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "36479414899",
+    "project_id": "proconnect-a245e",
+    "storage_bucket": "proconnect-a245e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:36479414899:android:93a860880e85fb99a03006",
+        "android_client_info": {
+          "package_name": "com.example.proconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABbmfhmmdb_9EfsHQgTfRlM4N2ggnXFyA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
