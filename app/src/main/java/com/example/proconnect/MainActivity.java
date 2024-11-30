@@ -15,16 +15,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-        loadFragment(new homeScreen());
+        loadFragment(new searchScreen());
         setContentView(binding.getRoot());
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
-            if (itemId == R.id.home) {
-                loadFragment(new homeScreen());
-            } else if (itemId == R.id.search) {
+            if (itemId == R.id.search) {
                 loadFragment(new searchScreen());
+            } else if (itemId == R.id.notifications) {
+                loadFragment(new notification());
             } else if (itemId == R.id.settings) {
                 loadFragment(new user_settings());
             }

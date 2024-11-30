@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/backgroundgray"
+    tools:context=".login_screen">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="49dp"
+        android:background="@drawable/darkgray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:gravity="center"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:text="Welcome to ProConnect"
+        android:textColor="@color/white"
+        android:textSize="25dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/etUserName"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="132dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="Username:"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <EditText
+        android:id="@+id/etPassWord"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="45dp"
+        android:background="@drawable/gray_rectengle"
+        android:hint="Password:"
+        android:fontFamily="sans-serif-black"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etUserName" />
+
+    <Button
+        android:id="@+id/btnSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="108dp"
+        android:backgroundTint="@color/gray"
+        android:fontFamily="sans-serif-black"
+        android:text="Sign up"
+        android:textColor="@color/cyan"
+        android:textSize="17dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPassWord" />
+
+    <Button
+        android:id="@+id/btnLogIn"
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_marginStart="260dp"
+        android:layout_marginTop="104dp"
+        android:backgroundTint="@color/gray"
+        android:fontFamily="sans-serif-black"
+        android:text="Log in"
+        android:textColor="@color/cyan"
+        android:textSize="17dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPassWord" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

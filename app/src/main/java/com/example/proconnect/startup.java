@@ -24,7 +24,7 @@ public class startup extends AppCompatActivity {
                     sleep(2600);
 
 //start new activity
-                    Intent i = new Intent(startup.this, MainActivity.class);
+                    Intent i = new Intent(startup.this, login_screen.class);
                     startActivity(i);
 
 //destroying Splash activity

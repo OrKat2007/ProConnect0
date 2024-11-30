@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="Home"
-        android:icon="@drawable/home"
-        android:id="@+id/home"/>
     <item android:title="Search"
         android:icon="@drawable/search"
         android:id="@+id/search"/>
+    <item android:title="Notifications"
+        android:icon="@drawable/notifications"
+        android:id="@+id/notifications"/>
     <item android:title="Settings"
         android:icon="@drawable/settings"
         android:id="@+id/settings"/>
