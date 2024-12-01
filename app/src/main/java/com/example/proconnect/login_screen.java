@@ -5,19 +5,24 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.ButtonBarLayout;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class login_screen extends AppCompatActivity implements View.OnClickListener {
 
-    EditText username, password;
+    EditText etEmail, etpassword;
     Button login, signup;
     private FirebaseAuth mAuth;
 
@@ -25,7 +30,7 @@ public class login_screen extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAuth = FirebaseAuth.getInstance();
-        username = findViewById(R.id.etUserName);
+        etEmail = findViewById(R.id.etEmail);
         etpassword = findViewById(R.id.etPassWord);
         login = findViewById(R.id.btnLogIn);
         signup = findViewById(R.id.btnSignUp);
@@ -40,24 +45,19 @@ public class login_screen extends AppCompatActivity implements View.OnClickListe
             startActivity(intent);
         }
         if (v == signup){
-            String username =
-            String password = .getText().toString().trim();
+            String email = etEmail.getText().toString().trim();
+            String password = etpassword.getText().toString().trim();
 
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                // Sign in success, update UI with the signed-in user's information
-                                Log.d(TAG, "signInWithEmail:success");
-                                FirebaseUser user = mAuth.getCurrentUser();
-                                updateUI(user);
-                            } else {
-                                // If sign in fails, display a message to the user.
-                                Log.w(TAG, "signInWithEmail:failure", task.getException());
-                                Toast.makeText(EmailPasswordActivity.this, "Authentication failed.",
+                                Toast.makeText(login_screen.this, "Authentication Success.",
                                         Toast.LENGTH_SHORT).show();
-                                updateUI(null);
+                            } else {
+                                Toast.makeText(login_screen.this, "Authentication failed.",
+                                        Toast.LENGTH_SHORT).show();
                             }
                         }
                     });

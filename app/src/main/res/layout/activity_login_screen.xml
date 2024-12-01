@@ -26,14 +26,14 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/etUserName"
+        android:id="@+id/etEmail"
         android:layout_width="306dp"
         android:layout_height="55dp"
         android:layout_marginStart="52dp"
         android:layout_marginTop="132dp"
         android:background="@drawable/gray_rectengle"
         android:fontFamily="sans-serif-black"
-        android:hint="Username:"
+        android:hint="Email:"
         android:paddingLeft="30dp"
         android:paddingRight="30dp"
         android:textColorHint="@color/black"
@@ -53,7 +53,7 @@
         android:paddingRight="30dp"
         android:textColorHint="@color/black"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etUserName" />
+        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
 
     <Button
         android:id="@+id/btnSignUp"
