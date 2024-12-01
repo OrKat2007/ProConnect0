@@ -19,6 +19,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 
 public class login_screen extends AppCompatActivity implements View.OnClickListener {
 
@@ -29,7 +31,8 @@ public class login_screen extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAuth = FirebaseAuth.getInstance();
+        setContentView(R.layout.activity_login_screen);
+       mAuth = FirebaseAuth.getInstance();
         etEmail = findViewById(R.id.etEmail);
         etpassword = findViewById(R.id.etPassWord);
         login = findViewById(R.id.btnLogIn);
@@ -41,26 +44,39 @@ public class login_screen extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         if(v == login){
-            Intent intent = new Intent(login_screen.this, MainActivity.class);
-            startActivity(intent);
-        }
-        if (v == signup){
             String email = etEmail.getText().toString().trim();
             String password = etpassword.getText().toString().trim();
 
-            mAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(login_screen.this, "Authentication Success.",
-                                        Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(login_screen.this, "Authentication failed.",
-                                        Toast.LENGTH_SHORT).show();
+            try {
+                mAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(login_screen.this, "Authentication Success", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(login_screen.this, MainActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                } else {
+                                    String errorMessage;
+                                    try {
+                                        throw task.getException();
+                                    } catch (FirebaseAuthInvalidUserException e) {
+                                        errorMessage = "This email is not registered.";
+                                    } catch (FirebaseAuthInvalidCredentialsException e) {
+                                        errorMessage = "Incorrect email or password.";
+                                    } catch (Exception e) {
+                                        errorMessage = "Authentication failed. Please try again.";
+                                    }
+                                    Toast.makeText(login_screen.this, errorMessage, Toast.LENGTH_LONG).show();
+                                }
                             }
-                        }
-                    });
+                        });
+            } catch (Exception e) {
+                Toast.makeText(login_screen.this, "An error occurred: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }
+        if (v == signup){
             Intent intent = new Intent(login_screen.this, sign_up.class);
             startActivity(intent);
         }
