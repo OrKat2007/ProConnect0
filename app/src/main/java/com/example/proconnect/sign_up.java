@@ -9,19 +9,25 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
-    EditText etusername, etpassword;
+    EditText etusername, etpassword, etEmail;
     Button back, signup;
+    private FirebaseAuth mAuth;
 
-    private FirebaseAnalytics mFirebaseAnalytics;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,22 +35,19 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sign_up);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        mAuth = FirebaseAuth.getInstance();
 
         etusername = findViewById(R.id.etUserName);
         etpassword = findViewById(R.id.etPassWord);
+        etEmail = findViewById(R.id.etEmail);
         back = findViewById(R.id.btnBack);
         signup = findViewById(R.id.btnRealSignUp);
 
         signup.setOnClickListener(this);
         back.setOnClickListener(this);
     }
+
+
 
     @Override
     public void onClick(View v) {
@@ -53,23 +56,22 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
             startActivity(intent);
         }
         if (v == signup) {
-            saveNameToFirebaseAnalytics();
+            String email = etEmail.getText().toString().trim();
+            String password = etpassword.getText().toString().trim();
+
+            mAuth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(sign_up.this, "Authentication Success.",
+                                        Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(sign_up.this, "Authentication failed.",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
         }
-    }
-
-    private void saveNameToFirebaseAnalytics() {
-        String name = etusername.getText().toString().trim();
-
-        if (TextUtils.isEmpty(name)) {
-            Toast.makeText(this, "Please enter a name", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Bundle bundle = new Bundle();
-        bundle.putString("username", name);
-        mFirebaseAnalytics.logEvent("user_signup", bundle);
-
-        Intent intent = new Intent(sign_up.this, MainActivity.class);
-        startActivity(intent);
     }
 }
