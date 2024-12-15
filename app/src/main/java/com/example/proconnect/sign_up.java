@@ -66,6 +66,8 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                             if (task.isSuccessful()) {
                                 Toast.makeText(sign_up.this, "Authentication Success.",
                                         Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(sign_up.this, MainActivity.class);
+                                startActivity(intent);
                             } else {
                                 Toast.makeText(sign_up.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
