@@ -15,10 +15,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.proconnect.model.userModel;
+import com.example.proconnect.utils.FirebaseUtil;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
@@ -45,6 +48,17 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
         signup.setOnClickListener(this);
         back.setOnClickListener(this);
+    }
+
+    void getUsername(){
+        FirebaseUtil.currentUserDetails().get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()){
+                    task.getResult().toObject(userModel.class);
+                }
+            }
+        });
     }
 
 
