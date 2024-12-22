@@ -42,6 +42,12 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-storage")
+    implementation ("com.google.firebase:firebase-messaging")
+    implementation ("com.firebaseui:firebase-ui-firestore:8.0.2")
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+
 
     implementation(libs.appcompat)
     implementation(libs.material)

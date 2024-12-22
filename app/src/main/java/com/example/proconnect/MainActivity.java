@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
             if (itemId == R.id.search) {
                 loadFragment(new searchScreen());
             } else if (itemId == R.id.notifications) {
-                loadFragment(new notification());
+                loadFragment(new chats());
             } else if (itemId == R.id.settings) {
                 loadFragment(new user_settings());
             }
