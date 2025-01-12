@@ -24,9 +24,6 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
     Button back, signup;
     private FirebaseAuth mAuth;
 
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
