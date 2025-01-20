@@ -31,6 +31,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class user_settings extends Fragment {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
@@ -84,8 +86,11 @@ public class user_settings extends Fragment {
                                 Bitmap bitmap = decodeBase64ToImage(encodedImage);
                                 Glide.with(this)
                                         .load(bitmap)
-                                        .apply(RequestOptions.circleCropTransform())
+                                        .apply(new RequestOptions()
+                                                .circleCrop()
+                                                .override(200, 200)) // Adjust size programmatically
                                         .into(profileImage);
+
                                 profileImage.setVisibility(View.VISIBLE); // Show only after loading
                             }
                         } else {
@@ -141,7 +146,7 @@ public class user_settings extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        ImageButton profileImage = getView().findViewById(R.id.profileImage); // Ensure the button reference is obtained
+        ImageButton profileImage = getView().findViewById(R.id.profileImage);
 
         if (resultCode == getActivity().RESULT_OK && data != null) {
             if (requestCode == GALLERY) {
@@ -151,7 +156,13 @@ public class user_settings extends Fragment {
                         Bitmap selectedImage = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), selectedImageUri);
                         String encodedImage = encodeImageToBase64(selectedImage);
                         saveImageToFirestore(encodedImage);
-                        profileImage.setImageBitmap(selectedImage); // Update the button's image
+
+                        Glide.with(this)
+                                .load(selectedImage)
+                                .apply(new RequestOptions()
+                                        .circleCrop()
+                                        .override(200, 200))
+                                .into(profileImage);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -162,16 +173,21 @@ public class user_settings extends Fragment {
                     if (photo != null) {
                         String encodedImage = encodeImageToBase64(photo);
                         saveImageToFirestore(encodedImage);
-                        profileImage.setImageBitmap(photo); // Update the button's image
+
+                        Glide.with(this)
+                                .load(photo)
+                                .apply(new RequestOptions()
+                                        .circleCrop()
+                                        .override(200, 200))
+                                .into(profileImage);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-        } else {
-            Log.e("ActivityResult", "Result not OK or data is null");
         }
     }
+
 
     private String encodeImageToBase64(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -184,12 +200,17 @@ public class user_settings extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String userId = user.getUid();
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("profileImage", encodedImage);
+
+            // Use set() to ensure the document is created if it doesn't exist
             firestore.collection("users").document(userId)
-                    .update("profileImage", encodedImage)
-                    .addOnSuccessListener(aVoid -> Log.d("Firestore", "Profile image updated"))
-                    .addOnFailureListener(e -> Log.e("Firestore", "Failed to update profile image", e));
+                    .set(userData) // Use set() instead of update()
+                    .addOnSuccessListener(aVoid -> Log.d("Firestore", "Profile image saved or updated"))
+                    .addOnFailureListener(e -> Log.e("Firestore", "Failed to save profile image", e));
         }
     }
+
 
 
     private Bitmap decodeBase64ToImage(String encodedImage) {
