@@ -86,7 +86,7 @@ public class user_settings extends Fragment {
                                         .load(bitmap)
                                         .apply(new RequestOptions()
                                                 .circleCrop()
-                                                .override(200, 200)) // Adjust size programmatically
+                                                .override(250, 250)) // Adjust size programmatically
                                         .into(profileImage);
 
                                 profileImage.setVisibility(View.VISIBLE); // Show only after loading
@@ -165,7 +165,7 @@ public class user_settings extends Fragment {
                                     .load(resizedImage)
                                     .apply(new RequestOptions()
                                             .circleCrop()
-                                            .override(200, 200))
+                                            .override(250, 250))
                                     .into(profileImage);
                         }
                     } else {
@@ -188,7 +188,7 @@ public class user_settings extends Fragment {
                                 .load(resizedImage)
                                 .apply(new RequestOptions()
                                         .circleCrop()
-                                        .override(200, 200))
+                                        .override(250, 250))
                                 .into(profileImage);
                     }
                 } catch (Exception e) {
