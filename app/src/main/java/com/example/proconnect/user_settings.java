@@ -73,42 +73,50 @@ public class user_settings extends Fragment {
 
     private void loadProfileImage(ImageButton profileImage) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null && user.g != null) {
-            String userId = user.getUid();
-            firestore.collection("users").document(userId)
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists() && documentSnapshot.contains("profileImage")) {
-                            String encodedImage = documentSnapshot.getString("profileImage");
-                            if (encodedImage != null) {
-                                Bitmap bitmap = decodeBase64ToImage(encodedImage);
-                                Glide.with(this)
-                                        .load(bitmap)
-                                        .apply(new RequestOptions()
-                                                .circleCrop()
-                                                .override(250, 250)) // Adjust size programmatically
-                                        .into(profileImage);
 
-                                profileImage.setVisibility(View.VISIBLE); // Show only after loading
-                            }
-                        } else {
-                            // No profile image: Load a default
-                            Glide.with(this)
-                                    .load(R.drawable.home)
-                                    .apply(RequestOptions.circleCropTransform())
-                                    .into(profileImage);
-                            profileImage.setVisibility(View.VISIBLE); // Show only after loading
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("Firestore", "Failed to load profile image", e);
-                        Glide.with(this)
-                                .load(R.drawable.home)
-                                .apply(RequestOptions.circleCropTransform())
-                                .into(profileImage);
-                        profileImage.setVisibility(View.VISIBLE); // Show even if failed
-                    });
+        if (user == null) {
+            loadDefaultProfileImage(profileImage);
+            return;
         }
+
+        String email = user.getEmail(); // Get the user's email
+        String safeEmail = email.replace("@", "_").replace(".", "_"); // Format the email
+
+        firestore.collection("users").document(safeEmail) // Use safeEmail as document ID
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Convert Firestore document to usermodel object
+                        usermodel userModel1 = documentSnapshot.toObject(usermodel.class);
+
+                        if (userModel1 != null && userModel1.getProfileImage() != null && !userModel1.getProfileImage().isEmpty()) {
+                            // Decode and load profile image
+                            Bitmap bitmap = decodeBase64ToImage(userModel1.getProfileImage());
+                            Glide.with(this)
+                                    .load(bitmap)
+                                    .apply(new RequestOptions().circleCrop().override(250, 250))
+                                    .into(profileImage);
+
+                            profileImage.setVisibility(View.VISIBLE);
+                        } else {
+                            loadDefaultProfileImage(profileImage);
+                        }
+                    } else {
+                        loadDefaultProfileImage(profileImage);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Failed to load profile image", e);
+                    loadDefaultProfileImage(profileImage);
+                });
+    }
+
+    private void loadDefaultProfileImage(ImageButton profileImage) {
+        Glide.with(this)
+                .load(R.drawable.home)
+                .apply(RequestOptions.circleCropTransform())
+                .into(profileImage);
+        profileImage.setVisibility(View.VISIBLE);
     }
 
     private void showPictureDialog() {
@@ -207,24 +215,19 @@ public class user_settings extends Fragment {
 
     private void saveImageToFirestore(String encodedImage) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            String userId = user.getUid();
-            Log.d("Firestore", "Attempting to save image for user ID: " + userId);
+        if (user == null) return;
 
-            Map<String, Object> userData = new HashMap<>();
-            userData.put("profileImage", encodedImage);
+        String email = user.getEmail();
+        String safeEmail = email.replace("@", "_").replace(".", "_"); // Use the same format for email
 
-            firestore.collection("users").document(userId)
-                    .set(userData)
-                    .addOnSuccessListener(aVoid -> Log.d("Firestore", "Profile image saved or updated"))
-                    .addOnFailureListener(e -> {
-                        Log.e("Firestore", "Failed to save profile image", e);
-                        // Print the stack trace to see more detailed error information
-                        e.printStackTrace();
-                    });
-        } else {
-            Log.e("Firestore", "User is not authenticated");
-        }
+        // Update only the "profileImage" field, keeping other data intact
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("profileImage", encodedImage);
+
+        firestore.collection("users").document(safeEmail) // Use safeEmail as document ID
+                .update(updateData)  // Use update() instead of set()
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Profile image updated successfully"))
+                .addOnFailureListener(e -> Log.e("Firestore", "Failed to update profile image", e));
     }
 
     private Bitmap decodeBase64ToImage(String encodedImage) {

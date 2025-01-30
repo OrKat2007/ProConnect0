@@ -1,6 +1,9 @@
 package com.example.proconnect;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -22,7 +25,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
     EditText etusername, etpassword, etEmail;
-    Button back, signup;
+    Button back, signup ,probtn;
+    boolean ispro = false;
     private FirebaseAuth mAuth;
     private FirebaseFirestore firestore;
 
@@ -34,7 +38,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
         mAuth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance(); // Initialize Firestore
-
+        probtn = findViewById(R.id.btnPro);
         etusername = findViewById(R.id.etUserName);
         etpassword = findViewById(R.id.etPassWord);
         etEmail = findViewById(R.id.etEmail);
@@ -50,6 +54,13 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         if (v == back) {
             Intent intent = new Intent(sign_up.this, login_screen.class);
             startActivity(intent);
+        }
+        if(v == probtn){
+            ispro = true;
+            probtn.setBackgroundTintMode(PorterDuff.Mode.SRC_ATOP);
+            probtn.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
+            probtn.tint
+
         }
         if (v == signup) {
             String name = etusername.getText().toString().trim();
@@ -72,8 +83,11 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                                     user.updateProfile(profileUpdates)
                                             .addOnCompleteListener(task1 -> {
                                                 if (task1.isSuccessful()) {
+                                                    // Convert email to Firestore-safe ID
+                                                    String safeEmail = email.replace("@", "_").replace(".", "_");
+
                                                     // Now store user info in Firestore
-                                                    saveUserToFirestore(user.getUid(), name, email);
+                                                    saveUserToFirestore(safeEmail, name, email);
                                                 } else {
                                                     Toast.makeText(sign_up.this, "Failed to save name: " + task1.getException().getMessage(), Toast.LENGTH_LONG).show();
                                                 }
@@ -87,14 +101,10 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         }
     }
 
-    private void saveUserToFirestore(String uid, String name, String email) {
-        name = etusername.getText().toString().trim();
-        email = etEmail.getText().toString().trim();
-        FirebaseUser user = mAuth.getCurrentUser();
-        String uid1 = user.getUid();
-        usermodel newUser = new usermodel(uid1 , name, email, false); // Default isProfessional = false
+    private void saveUserToFirestore(String safeEmail, String name, String email) {
+        usermodel newUser = new usermodel(safeEmail, name, email, false); // Default isProfessional = false
 
-        firestore.collection("users").document(uid)
+        firestore.collection("users").document(safeEmail)
                 .set(newUser)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(sign_up.this, "User saved to Firestore", Toast.LENGTH_SHORT).show();
