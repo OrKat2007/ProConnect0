@@ -17,12 +17,14 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
     EditText etusername, etpassword, etEmail;
     Button back, signup;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +33,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         setContentView(R.layout.activity_sign_up);
 
         mAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance(); // Initialize Firestore
 
         etusername = findViewById(R.id.etUserName);
         etpassword = findViewById(R.id.etPassWord);
@@ -42,8 +45,6 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         back.setOnClickListener(this);
     }
 
-
-
     @Override
     public void onClick(View v) {
         if (v == back) {
@@ -51,7 +52,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
             startActivity(intent);
         }
         if (v == signup) {
-            String name = etusername.getText().toString();
+            String name = etusername.getText().toString().trim();
             String email = etEmail.getText().toString().trim();
             String password = etpassword.getText().toString().trim();
 
@@ -63,23 +64,18 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                                 FirebaseUser user = mAuth.getCurrentUser();
 
                                 if (user != null) {
-                                    // Update the user's profile with the name
+                                    // Update Auth Profile
                                     UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                                             .setDisplayName(name)
                                             .build();
 
                                     user.updateProfile(profileUpdates)
-                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    if (task.isSuccessful()) {
-                                                        Toast.makeText(sign_up.this, "Account created.", Toast.LENGTH_SHORT).show();
-                                                        Intent intent = new Intent(sign_up.this, MainActivity.class);
-                                                        startActivity(intent);
-                                                        finish();
-                                                    } else {
-                                                        Toast.makeText(sign_up.this, "Failed to save name: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                                                    }
+                                            .addOnCompleteListener(task1 -> {
+                                                if (task1.isSuccessful()) {
+                                                    // Now store user info in Firestore
+                                                    saveUserToFirestore(user.getUid(), name, email);
+                                                } else {
+                                                    Toast.makeText(sign_up.this, "Failed to save name: " + task1.getException().getMessage(), Toast.LENGTH_LONG).show();
                                                 }
                                             });
                                 }
@@ -89,5 +85,23 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                         }
                     });
         }
+    }
+
+    private void saveUserToFirestore(String uid, String name, String email) {
+        name = etusername.getText().toString().trim();
+        email = etEmail.getText().toString().trim();
+        FirebaseUser user = mAuth.getCurrentUser();
+        String uid1 = user.getUid();
+        usermodel newUser = new usermodel(uid1 , name, email, false); // Default isProfessional = false
+
+        firestore.collection("users").document(uid)
+                .set(newUser)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(sign_up.this, "User saved to Firestore", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(sign_up.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                })
+                .addOnFailureListener(e -> Toast.makeText(sign_up.this, "Firestore Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 }

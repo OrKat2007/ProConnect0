@@ -73,7 +73,7 @@ public class user_settings extends Fragment {
 
     private void loadProfileImage(ImageButton profileImage) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
+        if (user != null && user.g != null) {
             String userId = user.getUid();
             firestore.collection("users").document(userId)
                     .get()
