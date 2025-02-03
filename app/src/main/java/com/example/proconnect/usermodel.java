@@ -5,7 +5,7 @@ public class usermodel {
     private String name;
     private String email;
     private String profileImage; // Base64 encoded string
-    private boolean isProfessional;
+    private boolean isProfessional = false;
 
     // Empty constructor required for Firestore
     public usermodel() {}

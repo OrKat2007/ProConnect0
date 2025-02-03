@@ -22,8 +22,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -64,7 +62,6 @@ public class user_settings extends Fragment {
             username.setText("Unknown User");
         }
 
-        // Check and load the existing profile picture
         profileImage.setVisibility(View.INVISIBLE);
         loadProfileImage(profileImage);
 
@@ -75,56 +72,39 @@ public class user_settings extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user == null) {
-            loadDefaultProfileImage(profileImage);
+            profileImage.setVisibility(View.VISIBLE);
             return;
         }
 
-        String email = user.getEmail(); // Get the user's email
-        String safeEmail = email.replace("@", "_").replace(".", "_"); // Format the email
+        String email = user.getEmail();
+        String safeEmail = email.replace("@", "_").replace(".", "_");
 
-        firestore.collection("users").document(safeEmail) // Use safeEmail as document ID
+        firestore.collection("users").document(safeEmail)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // Convert Firestore document to usermodel object
                         usermodel userModel1 = documentSnapshot.toObject(usermodel.class);
-
                         if (userModel1 != null && userModel1.getProfileImage() != null && !userModel1.getProfileImage().isEmpty()) {
-                            // Decode and load profile image
                             Bitmap bitmap = decodeBase64ToImage(userModel1.getProfileImage());
-                            Glide.with(this)
-                                    .load(bitmap)
-                                    .apply(new RequestOptions().circleCrop().override(250, 250))
-                                    .into(profileImage);
-
+                            profileImage.setImageBitmap(bitmap);
                             profileImage.setVisibility(View.VISIBLE);
                         } else {
-                            loadDefaultProfileImage(profileImage);
+                            profileImage.setVisibility(View.VISIBLE);
                         }
                     } else {
-                        loadDefaultProfileImage(profileImage);
+                        profileImage.setVisibility(View.VISIBLE);
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e("Firestore", "Failed to load profile image", e);
-                    loadDefaultProfileImage(profileImage);
+                    profileImage.setVisibility(View.VISIBLE);
                 });
-    }
-
-    private void loadDefaultProfileImage(ImageButton profileImage) {
-        Glide.with(this)
-                .load(R.drawable.home)
-                .apply(RequestOptions.circleCropTransform())
-                .into(profileImage);
-        profileImage.setVisibility(View.VISIBLE);
     }
 
     private void showPictureDialog() {
         AlertDialog.Builder pictureDialog = new AlertDialog.Builder(getContext());
         pictureDialog.setTitle("נא לבחור מאיפה להוסיף תמונה:");
-        String[] pictureDialogItems = {
-                "מהגלריה",
-                "מהמצלמה"};
+        String[] pictureDialogItems = {"מהגלריה", "מהמצלמה"};
         pictureDialog.setItems(pictureDialogItems, (dialog, which) -> {
             if (which == 0) {
                 choosePhotoFromGallery();
@@ -157,27 +137,11 @@ public class user_settings extends Fragment {
                 try {
                     Uri selectedImageUri = data.getData();
                     if (selectedImageUri != null) {
-                        // Log the URI to debug if it's valid
-                        Log.d("GalleryImage", "Selected image URI: " + selectedImageUri.toString());
-
-                        // Check if the URI is valid and resolve the image
                         Bitmap selectedImage = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), selectedImageUri);
-                        if (selectedImage != null) {
-                            // Resize the image before encoding it
-                            Bitmap resizedImage = resizeImage(selectedImage, 1024, 1024); // Resize to fit within 1024x1024
-
-                            String encodedImage = encodeImageToBase64(resizedImage);
-                            saveImageToFirestore(encodedImage);
-
-                            Glide.with(this)
-                                    .load(resizedImage)
-                                    .apply(new RequestOptions()
-                                            .circleCrop()
-                                            .override(250, 250))
-                                    .into(profileImage);
-                        }
-                    } else {
-                        Log.e("GalleryImage", "Selected image URI is null");
+                        Bitmap resizedImage = resizeImage(selectedImage, 1024, 1024);
+                        String encodedImage = encodeImageToBase64(resizedImage);
+                        saveImageToFirestore(encodedImage);
+                        profileImage.setImageBitmap(resizedImage);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -186,18 +150,10 @@ public class user_settings extends Fragment {
                 try {
                     Bitmap photo = (Bitmap) data.getExtras().get("data");
                     if (photo != null) {
-                        // Resize the image before encoding it
-                        Bitmap resizedImage = resizeImage(photo, 1024, 1024); // Resize to fit within 1024x1024
-
+                        Bitmap resizedImage = resizeImage(photo, 1024, 1024);
                         String encodedImage = encodeImageToBase64(resizedImage);
                         saveImageToFirestore(encodedImage);
-
-                        Glide.with(this)
-                                .load(resizedImage)
-                                .apply(new RequestOptions()
-                                        .circleCrop()
-                                        .override(250, 250))
-                                .into(profileImage);
+                        profileImage.setImageBitmap(resizedImage);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -208,7 +164,7 @@ public class user_settings extends Fragment {
 
     private String encodeImageToBase64(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream); // Compress the image to 50% quality
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
@@ -218,14 +174,13 @@ public class user_settings extends Fragment {
         if (user == null) return;
 
         String email = user.getEmail();
-        String safeEmail = email.replace("@", "_").replace(".", "_"); // Use the same format for email
+        String safeEmail = email.replace("@", "_").replace(".", "_");
 
-        // Update only the "profileImage" field, keeping other data intact
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("profileImage", encodedImage);
 
-        firestore.collection("users").document(safeEmail) // Use safeEmail as document ID
-                .update(updateData)  // Use update() instead of set()
+        firestore.collection("users").document(safeEmail)
+                .update(updateData)
                 .addOnSuccessListener(aVoid -> Log.d("Firestore", "Profile image updated successfully"))
                 .addOnFailureListener(e -> Log.e("Firestore", "Failed to update profile image", e));
     }
@@ -238,7 +193,6 @@ public class user_settings extends Fragment {
     private Bitmap resizeImage(Bitmap originalImage, int maxWidth, int maxHeight) {
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
-
         float aspectRatio = (float) width / height;
         if (width > height) {
             width = maxWidth;
@@ -247,7 +201,6 @@ public class user_settings extends Fragment {
             height = maxHeight;
             width = Math.round(height * aspectRatio);
         }
-
         return Bitmap.createScaledBitmap(originalImage, width, height, false);
     }
 }
