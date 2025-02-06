@@ -3,6 +3,7 @@ package com.example.proconnect;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Bundle;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
@@ -20,6 +24,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     private List<usermodel> userList;
     private Context context;
+    private FragmentTransaction fragmentTransaction;
 
     public UserAdapter(List<usermodel> userList, Context context) {
         this.userList = userList;
@@ -36,13 +41,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         usermodel user = userList.get(position);
-
         holder.tvName.setText(user.getName());
         holder.tvProfession.setText(user.getProfession());
 
-        // Load profile image using Glide with CircleCrop for rounded image
+        // Load profile image using Glide and decode Base64 if needed
         if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
-            // Decode Base64 string into a Bitmap (if needed)
             try {
                 byte[] decodedString = Base64.decode(user.getProfileImage(), Base64.DEFAULT);
                 Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
@@ -61,8 +64,28 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         } else {
             holder.ivProfile.setImageResource(R.drawable.default_profile);
         }
-    }
 
+        // Handle item click to go to searchProfile fragment
+        holder.itemView.setOnClickListener(view -> {
+            // Assuming you're in an activity and using FragmentManager to replace fragments
+            Fragment fragment = new searchProfile();  // Create an instance of searchProfile fragment
+
+            // Pass user data to searchProfile fragment (you can add more data here)
+            Bundle bundle = new Bundle();
+            bundle.putString("userName", user.getName());
+            bundle.putString("profileImage", user.getProfileImage());  // You can pass the profile image URL
+            fragment.setArguments(bundle);
+
+            // Load the searchProfile fragment
+            if (context instanceof AppCompatActivity) {
+                AppCompatActivity activity = (AppCompatActivity) context;
+                FragmentTransaction transaction = activity.getSupportFragmentManager().beginTransaction();
+                transaction.replace(R.id.frame_layout, fragment);  // Replace the current fragment with searchProfile
+                transaction.addToBackStack(null);  // Optional: Add to backstack so the user can navigate back
+                transaction.commit();
+            }
+        });
+    }
 
 
     @Override
