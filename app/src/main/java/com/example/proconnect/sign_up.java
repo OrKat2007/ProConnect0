@@ -23,7 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
-    EditText etusername, etpassword, etEmail;
+    EditText etusername, etpassword, etEmail , etProfession;
     Button back, signup, probtn, userbtn;
     boolean ispro = false;
     private FirebaseAuth mAuth;
@@ -45,6 +45,9 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         etEmail = findViewById(R.id.etEmail);
         back = findViewById(R.id.btnBack);
         signup = findViewById(R.id.btnRealSignUp);
+        etProfession = findViewById(R.id.etProffession);
+
+        etProfession.setVisibility(View.GONE);
 
         signup.setOnClickListener(this);
         back.setOnClickListener(this);
@@ -60,13 +63,25 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         if (v == probtn) {
             ispro = true;
             updateButtonColors();
+            showProfessionField(true);
         }
         if (v == userbtn) {
             ispro = false;
             updateButtonColors();
+            showProfessionField(false);
         }
         if (v == signup) {
             registerUser();
+        }
+    }
+
+    private void showProfessionField(boolean show) {
+        if (show) {
+            etProfession.setVisibility(View.VISIBLE);
+            etProfession.setAlpha(0f);
+            etProfession.animate().alpha(1f).setDuration(500).start(); // Fade in
+        } else {
+            etProfession.animate().alpha(0f).setDuration(500).withEndAction(() -> etProfession.setVisibility(View.GONE)).start(); // Fade out
         }
     }
 
@@ -84,8 +99,9 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         String name = etusername.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String password = etpassword.getText().toString().trim();
+        String profession = ispro ? etProfession.getText().toString().trim() : "None"; // 🆕 Get profession or set to "None"
 
-        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+        if (name.isEmpty() || email.isEmpty() || password.isEmpty() || (ispro && profession.isEmpty())) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -101,7 +117,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
                             user.updateProfile(profileUpdates).addOnCompleteListener(task1 -> {
                                 if (task1.isSuccessful()) {
-                                    saveUserToFirestore(user.getEmail(), name, email);
+                                    saveUserToFirestore(user.getEmail(), name, email, profession); // 🆕 Pass profession
                                 } else {
                                     Toast.makeText(sign_up.this, "Failed to save name", Toast.LENGTH_LONG).show();
                                 }
@@ -113,9 +129,9 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                 });
     }
 
-    private void saveUserToFirestore(String safeEmail, String name, String email) {
+    private void saveUserToFirestore(String safeEmail, String name, String email, String profession) {
         String formattedEmail = email.replace("@", "_").replace(".", "_");
-        usermodel newUser = new usermodel(formattedEmail, name, email, ispro);
+        usermodel newUser = new usermodel(formattedEmail, name, email, ispro, profession); // 🆕 Include profession
 
         firestore.collection("users").document(formattedEmail)
                 .set(newUser)
@@ -126,4 +142,5 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                 })
                 .addOnFailureListener(e -> Toast.makeText(sign_up.this, "Firestore Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
+
 }
