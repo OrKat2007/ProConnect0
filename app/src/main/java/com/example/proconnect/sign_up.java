@@ -69,7 +69,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         }
         if (v == userbtn) {
             ispro = false;
-            updateButtonColors(); 
+            updateButtonColors();
             showProfessionField(false);
         }
         if (v == signup) {

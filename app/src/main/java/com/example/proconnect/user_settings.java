@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -35,6 +36,7 @@ public class user_settings extends Fragment {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
     private static final int GALLERY = 1, CAMERA = 2;
     private TextView username;
+    private Button logout;
     private FirebaseFirestore firestore;
 
     @Override
@@ -47,7 +49,9 @@ public class user_settings extends Fragment {
         ImageButton profileImage = view.findViewById(R.id.profileImage);
         profileImage.setOnClickListener(v -> showPictureDialog());
 
+        logout = view.findViewById(R.id.btnLogOut);
         username = view.findViewById(R.id.userName);
+
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null && currentUser.getDisplayName() != null) {
@@ -58,6 +62,17 @@ public class user_settings extends Fragment {
 
         profileImage.setVisibility(View.INVISIBLE);
         loadProfileImage(profileImage);
+
+        logout = view.findViewById(R.id.btnLogOut);
+        logout.setOnClickListener(v -> {
+            FirebaseAuth.getInstance().signOut();
+            // After signing out, navigate to the login activity or wherever you want the user to go
+            Intent intent = new Intent(getActivity(), login_screen.class); // Replace LoginActivity with your actual login activity
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK); // Clear back stack
+            startActivity(intent);
+            getActivity().finish(); //Finish the current activity so the user can't go back to the settings page without logging in.
+        });
+
 
         return view;
     }
