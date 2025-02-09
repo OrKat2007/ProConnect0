@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentReference;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
@@ -149,9 +151,27 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(sign_up.this, "User saved to Firestore", Toast.LENGTH_SHORT).show();
 
-                    // If the user is a pro, save the user profile to Firestore with rating data
+                    // If the user is a pro, create the review document
                     if (ispro) {
-                        // No need to save separately, as rating is already part of usermodel
+                        // Create a new ReviewModel instance using the constructor
+                        ReviewModel initialReview = new ReviewModel("No reviews yet!", email, 0f); // Default text, user email, default rating
+
+                        // Reference to Firestore where the review will be saved
+                        DocumentReference reviewDocRef = firestore.collection("reviews")
+                                .document(formattedEmail) // Use formatted email as document ID
+                                .collection("userReviews")
+                                .document(); // This will generate a new unique review document ID
+
+                        // Save the review document for the pro user
+                        reviewDocRef.set(initialReview)
+                                .addOnSuccessListener(aVoid1 -> {
+                                    // Handle successful review creation
+                                    Log.d("SignUp", "Review document created successfully!");
+                                })
+                                .addOnFailureListener(e -> {
+                                    // Handle failure to create review
+                                    Log.w("SignUp", "Error creating review document", e);
+                                });
                     }
 
                     // Redirect to the main activity after successful sign-up
@@ -159,7 +179,6 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                     finish();
                 })
                 .addOnFailureListener(e -> Toast.makeText(sign_up.this, "Firestore Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
+
     }
-
-
 }

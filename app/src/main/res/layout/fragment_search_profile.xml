@@ -9,10 +9,9 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="450dp"
-        android:background="@drawable/graysqure">
+        android:layout_height="match_parent">
 
-
+        <!-- Profile Section -->
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="401dp"
@@ -57,7 +56,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="48dp"
             android:layout_marginTop="0dp"
-            android:text="Proffession:"
+            android:text="Profession:"
             android:textColor="@color/black"
             android:textSize="30dp"
             app:layout_constraintStart_toStartOf="parent"
@@ -75,29 +74,43 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
-        <TextView
-            android:id="@+id/tvRating"
+
+        <!-- RecyclerView for reviews -->
+        <RatingBar
+            android:id="@+id/ratingBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="48dp"
-            android:layout_marginTop="32dp"
-            android:text="Rating:"
-            android:textColor="@color/black"
-            android:textSize="30dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="28dp"
+            android:isIndicator="true"
+            android:numStars="5"
+            android:rating="3.5"
+            android:stepSize="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/locationtv" />
 
-        <ImageButton
-            android:id="@+id/chatimage"
+        <Button
+            android:id="@+id/btnPostReview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="289dp"
-            android:layout_marginTop="187dp"
-            android:src="@drawable/darkgray_rectengle"
+            android:layout_marginStart="40dp"
+            android:layout_marginTop="22dp"
+            android:backgroundTint="#606060"
+            android:fontFamily="sans-serif-black"
+            android:text="Post a review"
+            android:textColor="@color/white"
+            android:textSize="20dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView" />
+            app:layout_constraintTop_toBottomOf="@+id/ratingBar" />
 
-
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/reviewsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="17dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnPostReview"
+            app:layout_constraintBottom_toBottomOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </FrameLayout>
