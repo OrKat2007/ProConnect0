@@ -33,7 +33,7 @@ public class searchProfile extends Fragment {
             TextView userNameTextView = view.findViewById(R.id.userName);
             TextView professionTextView = view.findViewById(R.id.Proffessiontv);
             TextView locationTextView = view.findViewById(R.id.locationtv);
-            TextView ratingTextView = view.findViewById(R.id.textView5);
+            TextView ratingTextView = view.findViewById(R.id.tvRating);
 
             userNameTextView.setText(userName);
             professionTextView.setText("Proffession: " + profession);

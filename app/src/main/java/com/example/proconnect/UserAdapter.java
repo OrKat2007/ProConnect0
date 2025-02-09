@@ -24,7 +24,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     private List<usermodel> userList;
     private Context context;
-    private FragmentTransaction fragmentTransaction;
 
     public UserAdapter(List<usermodel> userList, Context context) {
         this.userList = userList;
@@ -34,8 +33,9 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Inflate the layout for each item (user_item.xml)
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.user_item, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view); // Return the ViewHolder with the view
     }
 
     @Override
@@ -44,49 +44,57 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.tvName.setText(user.getName());
         holder.tvProfession.setText(user.getProfession());
 
-        // Load profile image using Glide and decode Base64 if needed
+        // Set the profile image using Glide with CircleCrop
         if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
             try {
                 byte[] decodedString = Base64.decode(user.getProfileImage(), Base64.DEFAULT);
                 Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                 Glide.with(context)
                         .load(decodedByte)
-                        .transform(new CircleCrop())  // Apply CircleCrop transformation for rounded image
+                        .transform(new CircleCrop())
                         .placeholder(R.drawable.default_profile)
                         .error(R.drawable.default_profile)
                         .into(holder.ivProfile);
             } catch (Exception e) {
                 Glide.with(context)
                         .load(R.drawable.default_profile)
-                        .transform(new CircleCrop())  // Apply CircleCrop for the default profile image
+                        .transform(new CircleCrop())
                         .into(holder.ivProfile);
             }
         } else {
             holder.ivProfile.setImageResource(R.drawable.default_profile);
         }
 
-        // Handle item click to go to searchProfile fragment
-        holder.itemView.setOnClickListener(view -> {
-            // Assuming you're in an activity and using FragmentManager to replace fragments
-            Fragment fragment = new searchProfile();  // Create an instance of searchProfile fragment
+        // Set the rating text dynamically
+        if (holder.tvRating != null) {
+            if (user.getRatingCount() > 0) {
+                float rating = (float) user.getRatingSum() / user.getRatingCount();
+                holder.tvRating.setText("Rating: " + String.format("%.1f", rating) + " ⭐ (" + user.getRatingCount() + ")");
+            } else {
+                holder.tvRating.setText("No Ratings Yet");
+            }
+        }
 
-            // Pass user data to searchProfile fragment (you can add more data here)
+        // Handle item click to navigate to the profile fragment
+        holder.itemView.setOnClickListener(v -> {
+            searchProfile profileFragment = new searchProfile();
             Bundle bundle = new Bundle();
+            bundle.putString("uid", user.getUid());
             bundle.putString("userName", user.getName());
-            bundle.putString("profileImage", user.getProfileImage());  // You can pass the profile image URL
-            fragment.setArguments(bundle);
+            bundle.putString("profession", user.getProfession());
+            bundle.putString("location", user.getLocation());
+            bundle.putString("profileImage", user.getProfileImage());
+            profileFragment.setArguments(bundle);
 
-            // Load the searchProfile fragment
             if (context instanceof AppCompatActivity) {
                 AppCompatActivity activity = (AppCompatActivity) context;
                 FragmentTransaction transaction = activity.getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.frame_layout, fragment);  // Replace the current fragment with searchProfile
-                transaction.addToBackStack(null);  // Optional: Add to backstack so the user can navigate back
+                transaction.replace(R.id.frame_layout, profileFragment); // Replace the fragment
+                transaction.addToBackStack(null); // Optional: Add to backstack for navigation
                 transaction.commit();
             }
         });
     }
-
 
     @Override
     public int getItemCount() {
@@ -94,7 +102,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvProfession;
+        TextView tvName, tvProfession, tvRating; // Add tvRating here
         ImageView ivProfile;
 
         public ViewHolder(@NonNull View itemView) {
@@ -102,6 +110,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             tvName = itemView.findViewById(R.id.tvName);
             tvProfession = itemView.findViewById(R.id.tvProfession);
             ivProfile = itemView.findViewById(R.id.ivProfile);
+            tvRating = itemView.findViewById(R.id.tvRating);  // Ensure tvRating is initialized
         }
     }
 

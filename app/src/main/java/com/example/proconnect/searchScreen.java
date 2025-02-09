@@ -62,13 +62,21 @@ public class searchScreen extends Fragment {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         userList = new ArrayList<>();
-                        userAdapter = new UserAdapter(userList, getContext());  // Pass context, not the query
+                        userAdapter = new UserAdapter(userList, getContext());
                         recyclerView.setAdapter(userAdapter);
 
                         userList.clear();
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             usermodel user = document.toObject(usermodel.class);
                             if (user.getProfession() != null && user.getProfession().toLowerCase().contains(query.toLowerCase())) {
+
+                                // Ensure Firestore data is properly fetched
+                                String profession = document.getString("profession");
+                                String location = document.getString("location");
+
+                                // Set these values in the user object
+                                user.setProfession(profession);
+                                user.setLocation(location);
 
                                 userList.add(user);
                             }
@@ -77,4 +85,6 @@ public class searchScreen extends Fragment {
                     }
                 });
     }
+
 }
+

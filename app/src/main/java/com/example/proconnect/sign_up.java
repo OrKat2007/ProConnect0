@@ -137,18 +137,29 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                 });
     }
 
-    private void saveUserToFirestore(String safeEmail, String name, String email, String profession,String location) {
+    private void saveUserToFirestore(String safeEmail, String name, String email, String profession, String location) {
         String formattedEmail = email.replace("@", "_").replace(".", "_");
-        usermodel newUser = new usermodel(formattedEmail, name, email, ispro, profession, location); // 🆕 Include profession
 
+        // Create a new usermodel instance
+        usermodel newUser = new usermodel(formattedEmail, name, email, ispro, profession, location, 0, 0); // 🆕 Initialize with 0 ratingSum and ratingCount
+
+        // Save the user profile to Firestore
         firestore.collection("users").document(formattedEmail)
                 .set(newUser)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(sign_up.this, "User saved to Firestore", Toast.LENGTH_SHORT).show();
+
+                    // If the user is a pro, save the user profile to Firestore with rating data
+                    if (ispro) {
+                        // No need to save separately, as rating is already part of usermodel
+                    }
+
+                    // Redirect to the main activity after successful sign-up
                     startActivity(new Intent(sign_up.this, MainActivity.class));
                     finish();
                 })
                 .addOnFailureListener(e -> Toast.makeText(sign_up.this, "Firestore Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
+
 
 }
