@@ -44,12 +44,6 @@ public class user_settings extends Fragment {
 
         firestore = FirebaseFirestore.getInstance();
 
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
-        }
-
         ImageButton profileImage = view.findViewById(R.id.profileImage);
         profileImage.setOnClickListener(v -> showPictureDialog());
 
@@ -112,6 +106,11 @@ public class user_settings extends Fragment {
                 takePhotoFromCamera();
             }
         });
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+        }
         pictureDialog.show();
     }
 

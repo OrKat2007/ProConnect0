@@ -23,7 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
-    EditText etusername, etpassword, etEmail , etProfession;
+    EditText etusername, etpassword, etEmail , etProfession, etLocation;
     Button back, signup, probtn, userbtn;
     boolean ispro = false;
     private FirebaseAuth mAuth;
@@ -38,6 +38,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         mAuth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
 
+        etLocation = findViewById(R.id.etLocation);
         probtn = findViewById(R.id.btnPro);
         userbtn = findViewById(R.id.btnUser);
         etusername = findViewById(R.id.etUserName);
@@ -47,6 +48,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         signup = findViewById(R.id.btnRealSignUp);
         etProfession = findViewById(R.id.etProffession);
 
+        etLocation.setVisibility(View.GONE);
         etProfession.setVisibility(View.GONE);
 
         signup.setOnClickListener(this);
@@ -67,7 +69,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         }
         if (v == userbtn) {
             ispro = false;
-            updateButtonColors();
+            updateButtonColors(); 
             showProfessionField(false);
         }
         if (v == signup) {
@@ -80,8 +82,13 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
             etProfession.setVisibility(View.VISIBLE);
             etProfession.setAlpha(0f);
             etProfession.animate().alpha(1f).setDuration(500).start(); // Fade in
+
+            etLocation.setVisibility(View.VISIBLE);
+            etLocation.setAlpha(0f);
+            etLocation.animate().alpha(1f).setDuration(500).start(); // Fade in
         } else {
-            etProfession.animate().alpha(0f).setDuration(500).withEndAction(() -> etProfession.setVisibility(View.GONE)).start(); // Fade out
+            etProfession.animate().alpha(0f).setDuration(500).withEndAction(() -> etProfession.setVisibility(View.GONE)).start();
+            etLocation.animate().alpha(0f).setDuration(500).withEndAction(() -> etProfession.setVisibility(View.GONE)).start(); // Fade out
         }
     }
 
@@ -99,6 +106,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         String name = etusername.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String password = etpassword.getText().toString().trim();
+        String location = etLocation.getText().toString().trim();
         String profession = ispro ? etProfession.getText().toString().trim() : "None"; // 🆕 Get profession or set to "None"
 
         if (name.isEmpty() || email.isEmpty() || password.isEmpty() || (ispro && profession.isEmpty())) {
@@ -117,7 +125,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
                             user.updateProfile(profileUpdates).addOnCompleteListener(task1 -> {
                                 if (task1.isSuccessful()) {
-                                    saveUserToFirestore(user.getEmail(), name, email, profession); // 🆕 Pass profession
+                                    saveUserToFirestore(user.getEmail(), name, email, profession, location); // 🆕 Pass profession
                                 } else {
                                     Toast.makeText(sign_up.this, "Failed to save name", Toast.LENGTH_LONG).show();
                                 }
@@ -129,9 +137,9 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                 });
     }
 
-    private void saveUserToFirestore(String safeEmail, String name, String email, String profession) {
+    private void saveUserToFirestore(String safeEmail, String name, String email, String profession,String location) {
         String formattedEmail = email.replace("@", "_").replace(".", "_");
-        usermodel newUser = new usermodel(formattedEmail, name, email, ispro, profession); // 🆕 Include profession
+        usermodel newUser = new usermodel(formattedEmail, name, email, ispro, profession, location); // 🆕 Include profession
 
         firestore.collection("users").document(formattedEmail)
                 .set(newUser)

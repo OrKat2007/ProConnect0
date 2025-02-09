@@ -109,7 +109,7 @@
         android:layout_width="306dp"
         android:layout_height="55dp"
         android:layout_marginStart="90dp"
-        android:layout_marginTop="77dp"
+        android:layout_marginTop="36dp"
         android:layout_marginEnd="52dp"
         android:background="@drawable/gray_rectengle"
         android:fontFamily="sans-serif-black"
@@ -118,6 +118,25 @@
         android:paddingRight="30dp"
         android:textColorHint="@color/black"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnPro" />
+
+    <EditText
+        android:id="@+id/etLocation"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="90dp"
+        android:layout_marginTop="130dp"
+        android:layout_marginEnd="52dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="Location:"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnPro" />
 

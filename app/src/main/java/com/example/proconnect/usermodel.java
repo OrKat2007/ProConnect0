@@ -6,19 +6,21 @@ public class usermodel {
     private String email;
     private String profileImage; // Base64 encoded string
     private boolean isProfessional = false;
-    private String profession; // 🆕 Added profession field
+    private String profession;
+    private String location;// 🆕 Ad   ded profession field
 
     // Empty constructor required for Firestore
     public usermodel() {}
 
     // Constructor with parameters
-    public usermodel(String uid, String name, String email, boolean isProfessional, String profession) {
+    public usermodel(String uid, String name, String email, boolean isProfessional, String profession, String location) {
         this.uid = uid;
         this.name = name;
         this.email = email;
         this.profileImage = profileImage;
         this.isProfessional = isProfessional;
-        this.profession = profession; // 🆕 Initialize profession
+        this.profession = profession;
+        this.location = location;
     }
 
     // Getters and Setters
@@ -62,12 +64,19 @@ public class usermodel {
         isProfessional = professional;
     }
 
-    // 🆕 Profession Getter & Setter
     public String getProfession() {
         return profession;
     }
 
     public void setProfession(String profession) {
         this.profession = profession;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String name) {
+        this.location = location;
     }
 }

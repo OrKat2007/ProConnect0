@@ -2,12 +2,9 @@ package com.example.proconnect;
 
 import android.content.Intent;
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class startup extends AppCompatActivity {
 
@@ -16,27 +13,26 @@ public class startup extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_startup);
 
-        Thread t = new Thread() {
-            public void run() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
 
+        if (user != null) {
+            // User is logged in, go to MainActivity and finish this activity
+            Intent intent = new Intent(startup.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        } else {
+            // Start a delayed thread only if user is NOT logged in
+            new Thread(() -> {
                 try {
-//sleep thread for 10 seconds, time in milliseconds
-                    sleep(2600);
-
-//start new activity
+                    Thread.sleep(1000); // Sleep for 1 second
                     Intent i = new Intent(startup.this, login_screen.class);
                     startActivity(i);
-
-//destroying Splash activity
                     finish();
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        };
-
-//start thread
-        t.start();
+            }).start();
+        }
     }
 }
