@@ -92,7 +92,7 @@ public class user_settings extends Fragment {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        usermodel userModel1 = documentSnapshot.toObject(usermodel.class);
+                        UserModel userModel1 = documentSnapshot.toObject(UserModel.class);
                         if (userModel1 != null && userModel1.getProfileImage() != null && !userModel1.getProfileImage().isEmpty()) {
                             Bitmap bitmap = decodeBase64ToImage(userModel1.getProfileImage());
                             profileImage.setImageBitmap(bitmap);

@@ -1,14 +1,11 @@
 package com.example.proconnect;
 
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
-
 import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,96 +19,44 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FieldValue;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class searchProfile extends Fragment {
 
-    private FirebaseFirestore db;
+    private String professionalEmail;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_search_profile, container, false);
 
-        db = FirebaseFirestore.getInstance(); // Initialize Firestore
+        // Get reference to the "Post a review" button
+        Button btnPostReview = view.findViewById(R.id.btnPostReview);
 
+        // Set an OnClickListener to show the review dialog
+        btnPostReview.setOnClickListener(v -> showPostReviewDialog());
+
+        // Retrieve the data from the arguments
         Bundle args = getArguments();
         if (args != null) {
             String profession = args.getString("profession");
             String location = args.getString("location");
             String userName = args.getString("userName");
             String profileImage = args.getString("profileImage");
-            float ratingSum = args.getFloat("ratingSum", 0);  // Assuming ratingSum is passed
-            int ratingCount = args.getInt("ratingCount", 0);  // Assuming ratingCount is passed
+            int ratingSum = args.getInt("ratingSum");
+            int ratingCount = args.getInt("ratingCount");
+            professionalEmail = args.getString("email");
 
+            // Set the user profile data
             TextView userNameTextView = view.findViewById(R.id.userName);
             TextView professionTextView = view.findViewById(R.id.Proffessiontv);
             TextView locationTextView = view.findViewById(R.id.locationtv);
-            Button btnPostReview = view.findViewById(R.id.btnPostReview);
-
-            btnPostReview.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    // Create the dialog and inflate the custom layout
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());  // Use `getContext()` or `this` for Activity context
-                    View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_post_review, null);
-
-                    // Get the views from the dialog layout
-                    EditText etReview = dialogView.findViewById(R.id.etReview);
-                    RatingBar ratingBar = dialogView.findViewById(R.id.ratingBar);
-                    Button btnSubmitReview = dialogView.findViewById(R.id.btnSubmitReview);
-
-                    // Set up the dialog
-                    builder.setView(dialogView);
-                    builder.setCancelable(true);  // Allow the dialog to be dismissed by tapping outside
-
-                    final AlertDialog dialog = builder.create();
-
-                    // Handle the review submission
-
-                    btnSubmitReview.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            // Get the text and rating from the dialog
-                            String reviewText = etReview.getText().toString();
-                            float rating = ratingBar.getRating();
-
-                            // Check if the review text is not empty
-                            if (!reviewText.isEmpty()) {
-                                // Get the user's email or ID
-                                String userId = FirebaseAuth.getInstance().getCurrentUser().getEmail();
-
-                                if (userId != null) {
-                                    // Save the review to Firestore
-                                    saveReview(userId, reviewText, rating);
-
-                                    // Show a toast with the review and rating
-                                    Toast.makeText(getContext(), "Review: " + reviewText + "\nRating: " + rating, Toast.LENGTH_LONG).show();
-
-                                    // Dismiss the dialog after submitting the review
-                                    dialog.dismiss();
-                                } else {
-                                    // Handle the case if the user is not authenticated
-                                    Toast.makeText(getContext(), "User not authenticated. Please log in.", Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                // If the review text is empty, show a message
-                                Toast.makeText(getContext(), "Please write a review.", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-
-// Show the dialog
-                    dialog.show();
-
-                }
-            });
-
-            // Replace the rating TextView with the RatingBar
             RatingBar ratingBar = view.findViewById(R.id.ratingBar);
 
             userNameTextView.setText(userName);
@@ -120,12 +65,13 @@ public class searchProfile extends Fragment {
 
             // Calculate and set the rating
             if (ratingCount > 0) {
-                float rating = ratingSum / ratingCount;
-                ratingBar.setRating(rating);  // Set the rating on the RatingBar
+                float averageRating = (float) ratingSum / ratingCount;
+                ratingBar.setRating(averageRating);
             } else {
-                ratingBar.setRating(0);  // Set rating to 0 if no ratings
+                ratingBar.setRating(0);
             }
 
+            // Set the profile image
             ImageView profileImageView = view.findViewById(R.id.profileImage);
             if (profileImage != null && !profileImage.isEmpty()) {
                 try {
@@ -135,7 +81,6 @@ public class searchProfile extends Fragment {
                             .load(decodedByte)
                             .transform(new CircleCrop())
                             .placeholder(R.drawable.default_profile)
-                            .error(R.drawable.default_profile)
                             .into(profileImageView);
                 } catch (Exception e) {
                     Glide.with(getContext())
@@ -154,22 +99,118 @@ public class searchProfile extends Fragment {
         return view;
     }
 
-    public void saveReview(String userId, String reviewText, float rating) {
+    public void showPostReviewDialog() {
+        // Create the dialog
+        Dialog reviewDialog = new Dialog(getActivity());
+        reviewDialog.setContentView(R.layout.dialog_post_review);
+        reviewDialog.setCancelable(true);
+
+        // Get references to the EditText, RatingBar, and Post Review button
+        EditText etReview = reviewDialog.findViewById(R.id.etReview);
+        RatingBar ratingBar = reviewDialog.findViewById(R.id.ratingBar);
+        Button btnPostReview = reviewDialog.findViewById(R.id.btnPostReview);
+
+        // Set the OnClickListener for the Post Review button inside the dialog
+        btnPostReview.setOnClickListener(v -> {
+            String reviewText = etReview.getText().toString().trim();
+            float rating = ratingBar.getRating();
+
+            if (!reviewText.isEmpty()) {
+                // Proceed to post the review
+                postReview(reviewText, rating);
+
+                // Dismiss the dialog
+                reviewDialog.dismiss();
+            } else {
+                // Show a message if the review text is empty
+                Toast.makeText(getActivity(), "Please write a review", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Show the dialog
+        reviewDialog.show();
+    }
+
+    // The rest of your methods like postReview and updateProfessionalRating remain unchanged...
+
+
+    private void postReview(String reviewText, float rating) {
+        // Get the current user's email
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(getActivity(), "You need to be logged in to post a review", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userEmail = user.getEmail();
+        String formattedEmail = userEmail.replace("@", "_").replace(".", "_");
+
+        // Create a review document for the professional in Firestore
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference reviewDocRef = db.collection("reviews")
+                .document(formattedEmail) // Use the professional's formatted email as the document ID
+                .collection("reviewspost") // Subcollection for reviews
+                .document();
 
-        // Create a new PostReviewModel
-        ReviewModel review = new ReviewModel(reviewText, userId, rating);
+        // Prepare the review data
+        Map<String, Object> reviewData = new HashMap<>();
+        reviewData.put("reviewText", reviewText);
+        reviewData.put("rating", rating);
+        reviewData.put("timestamp", System.currentTimeMillis());
 
-        db.collection("reviews")
-                .document(userId) // Document ID is user's email or unique ID
-                .collection("userReviews") // Subcollection for user reviews
-                .add(review) // Save review model object
-                .addOnSuccessListener(documentReference -> {
-                    Log.d("Review", "Review saved successfully!");
+        // Add the review data to Firestore
+        reviewDocRef.set(reviewData)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getActivity(), "Review posted successfully", Toast.LENGTH_SHORT).show();
+
+                    // After posting the review, update the professional's rating info
+                    updateProfessionalRating(rating);
                 })
                 .addOnFailureListener(e -> {
-                    Log.w("Review", "Error saving review", e);
+                    Toast.makeText(getActivity(), "Error posting review: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
+    private void updateProfessionalRating(float rating) {
+        // Use the professional's email passed from the fragment
+        String formattedEmail = professionalEmail.replace("@", "_").replace(".", "_");
+
+        // Reference to the professional's review data in Firestore
+        DocumentReference professionalDocRef = FirebaseFirestore.getInstance()
+                .collection("reviews")
+                .document(formattedEmail);
+
+        professionalDocRef.get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            // Get current rating count and sum, checking for null
+                            int ratingCount = document.contains("ratingcount") ? document.getLong("ratingcount").intValue() : 0;
+                            float ratingSum = document.contains("ratingsum") ? document.getDouble("ratingsum").floatValue() : 0.0f;
+
+                            // Calculate new rating sum and count
+                            ratingCount++;
+                            ratingSum += rating;
+
+                            // Calculate the new rating
+                            float newRating = ratingSum / ratingCount;
+
+                            // Update the professional's rating info
+                            Map<String, Object> updatedData = new HashMap<>();
+                            updatedData.put("ratingcount", ratingCount);
+                            updatedData.put("ratingsum", ratingSum);
+                            updatedData.put("rating", newRating);
+
+                            professionalDocRef.update(updatedData)
+                                    .addOnSuccessListener(aVoid -> {
+                                        // Rating successfully updated
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(getActivity(), "Error updating rating: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    });
+                        }
+                    }
+                });
+    }
 }

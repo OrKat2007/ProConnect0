@@ -1,6 +1,6 @@
 package com.example.proconnect;
 
-public class usermodel {
+public class UserModel {
     private String uid;
     private String name;
     private String email;
@@ -8,15 +8,12 @@ public class usermodel {
     private boolean isProfessional = false;
     private String profession;
     private String location;
-    private float rating = 0.0f;
-    private int ratingCount = 0;
-    private int ratingSum = 0;// 🆕 Ad   ded profession field
 
     // Empty constructor required for Firestore
-    public usermodel() {}
+    public UserModel() {}
 
     // Constructor with parameters
-    public usermodel(String uid, String name, String email, boolean isProfessional, String profession, String location) {
+    public UserModel(String uid, String name, String email, boolean isProfessional, String profession, String location) {
         this.uid = uid;
         this.name = name;
         this.email = email;
@@ -25,20 +22,6 @@ public class usermodel {
         this.profession = profession;
         this.location = location;
     }
-
-    public usermodel(String uid, String name, String email, boolean isProfessional, String profession, String location, int ratingSum, int ratingCount) {
-        this.uid = uid;
-        this.name = name;
-        this.email = email;
-        this.profileImage = profileImage;
-        this.isProfessional = isProfessional;
-        this.profession = profession;
-        this.location = location;
-        this.ratingSum = ratingSum;
-        this.ratingCount = ratingCount;
-        this.rating = (ratingCount > 0) ? ((float) ratingSum / ratingCount) : 0.0f;
-    }
-
 
     // Getters and Setters
     public String getUid() {
@@ -95,25 +78,5 @@ public class usermodel {
 
     public void setLocation(String location) {
         this.location = location;
-    }
-
-    public int getRatingSum() {
-        return ratingSum;
-    }
-
-    public void setRatingSum(int ratingSum) {
-        this.ratingSum = ratingSum;
-    }
-
-    public int getRatingCount() {
-        return ratingCount;
-    }
-
-    public void setRatingCount(int ratingCount) {
-        this.ratingCount = ratingCount;
-    }
-
-    public float getRating() {
-        return (ratingCount > 0) ? ((float) ratingSum / ratingCount) : 0.0f;
     }
 }

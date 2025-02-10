@@ -20,8 +20,12 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
@@ -143,34 +147,54 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         String formattedEmail = email.replace("@", "_").replace(".", "_");
 
         // Create a new usermodel instance
-        usermodel newUser = new usermodel(formattedEmail, name, email, ispro, profession, location, 0, 0); // 🆕 Initialize with 0 ratingSum and ratingCount
+        UserModel newUser = new UserModel(formattedEmail, name, email, ispro, profession, location); // 🆕 Initialize with profession
 
         // Save the user profile to Firestore
         firestore.collection("users").document(formattedEmail)
                 .set(newUser)
-                .addOnSuccessListener(aVoid -> {
+                .addOnSuccessListener(result -> {
                     Toast.makeText(sign_up.this, "User saved to Firestore", Toast.LENGTH_SHORT).show();
 
-                    // If the user is a pro, create the review document
+                    // If the user is a professional, create their review data
                     if (ispro) {
-                        // Create a new ReviewModel instance using the constructor
-                        ReviewModel initialReview = new ReviewModel("No reviews yet!", email, 0f); // Default text, user email, default rating
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-                        // Reference to Firestore where the review will be saved
-                        DocumentReference reviewDocRef = firestore.collection("reviews")
-                                .document(formattedEmail) // Use formatted email as document ID
-                                .collection("userReviews")
-                                .document(); // This will generate a new unique review document ID
+                        // Create a new document in the "reviews" collection using the formatted email as the ID
+                        DocumentReference userReviewDoc = db.collection("reviews").document(formattedEmail);
 
-                        // Save the review document for the pro user
-                        reviewDocRef.set(initialReview)
-                                .addOnSuccessListener(aVoid1 -> {
-                                    // Handle successful review creation
-                                    Log.d("SignUp", "Review document created successfully!");
+                        // Set initial review data for the professional (rating, sum, count)
+                        Map<String, Object> professionalData = new HashMap<>();
+                        professionalData.put("rating", 0f);         // Default rating is 0
+                        professionalData.put("ratingsum", 0);      // Initial sum of ratings
+                        professionalData.put("ratingcount", 0);    // No ratings yet
+
+                        // Save the professional's review data to Firestore
+                        userReviewDoc.set(professionalData)
+                                .addOnSuccessListener(innerResult -> {
+                                    Log.d("SignUp", "Professional review data created successfully");
+
+                                    // Now create the "reviewspost" subcollection under the user's review document
+                                    CollectionReference reviewspostRef = userReviewDoc.collection("reviewspost");
+
+                                    // Create an example review (you can leave this part out once the reviews start coming)
+                                    Map<String, Object> initialReview = new HashMap<>();
+                                    initialReview.put("username", "admin"); // Example username
+                                    initialReview.put("reviewText", "Initial review");  // Example review text
+                                    initialReview.put("rating", 5); // Example rating (5 stars)
+
+                                    // Adding the dummy review to the "reviewspost" subcollection
+                                    reviewspostRef.document("initial_review") // Name it something like "initial_review"
+                                            .set(initialReview)
+                                            .addOnSuccessListener(dummyResult -> {
+                                                Log.d("SignUp", "Initial review added to reviewspost");
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e("SignUp", "Error adding initial review to reviewspost: " + e.getMessage());
+                                            });
                                 })
                                 .addOnFailureListener(e -> {
-                                    // Handle failure to create review
-                                    Log.w("SignUp", "Error creating review document", e);
+                                    Log.e("SignUp", "Error creating professional review data: " + e.getMessage());
+                                    Toast.makeText(sign_up.this, "Error creating professional review data", Toast.LENGTH_LONG).show();
                                 });
                     }
 
@@ -179,6 +203,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                     finish();
                 })
                 .addOnFailureListener(e -> Toast.makeText(sign_up.this, "Firestore Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
+
 
     }
 }

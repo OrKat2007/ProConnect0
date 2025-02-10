@@ -5,31 +5,38 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.List;
 
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
-    private List<usermodel> userList;
+    private List<UserModel> userList;
     private Context context;
+    private FirebaseFirestore firestore;
 
-    public UserAdapter(List<usermodel> userList, Context context) {
+    public UserAdapter(List<UserModel> userList, Context context) {
         this.userList = userList;
         this.context = context;
+        this.firestore = FirebaseFirestore.getInstance();
     }
 
     @NonNull
@@ -42,7 +49,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        usermodel user = userList.get(position);
+        UserModel user = userList.get(position);
         holder.tvName.setText(user.getName());
         holder.tvProfession.setText(user.getProfession());
 
@@ -67,18 +74,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             holder.ivProfile.setImageResource(R.drawable.default_profile);
         }
 
-        // Set the rating dynamically on the RatingBar
-        if (holder.ratingBar != null) {
-            if (user.getRatingCount() > 0) {
-                float rating = user.getRatingSum() / user.getRatingCount();
-                holder.ratingBar.setRating(rating);  // Set the rating on the RatingBar
-            } else {
-                holder.ratingBar.setRating(0);  // Set rating to 0 if no ratings
-            }
-        } else {
-            Log.e("UserAdapter", "RatingBar is null!");
-        }
-
+        // Fetch rating information from the reviews collection
+        fetchRatingFromReviews(user.getUid(), holder.ratingBar);
 
         // Handle item click to navigate to the profile fragment
         holder.itemView.setOnClickListener(v -> {
@@ -89,8 +86,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             bundle.putString("profession", user.getProfession());
             bundle.putString("location", user.getLocation());
             bundle.putString("profileImage", user.getProfileImage());
-            bundle.putFloat("ratingSum", user.getRatingSum());  // Pass rating sum
-            bundle.putInt("ratingCount", user.getRatingCount());  // Pass rating count
             profileFragment.setArguments(bundle);
 
             if (context instanceof AppCompatActivity) {
@@ -108,22 +103,50 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         return userList.size();
     }
 
+    private void fetchRatingFromReviews(String userId, RatingBar ratingBar) {
+        // Ensure ratingBar is not null
+        if (ratingBar == null) {
+            return; // Exit if RatingBar is not available
+        }
+
+        DocumentReference reviewDocRef = firestore.collection("reviews").document(userId);
+
+        reviewDocRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                if (task.getResult() != null && task.getResult().exists()) {
+                    float ratingSum = task.getResult().getDouble("ratingsum").floatValue();
+                    int ratingCount = task.getResult().getLong("ratingcount").intValue();
+
+                    if (ratingCount > 0) {
+                        float rating = ratingSum / ratingCount; // Calculate the average rating
+                        ratingBar.setRating(rating); // Set the rating on RatingBar
+                    } else {
+                        ratingBar.setRating(0); // Set rating to 0 if no reviews
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Failed to fetch rating", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvProfession; // Removed tvRating
+        TextView tvName, tvProfession;
         ImageView ivProfile;
-        RatingBar ratingBar;  // Added RatingBar
+        RatingBar ratingBar;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
             tvProfession = itemView.findViewById(R.id.tvProfession);
             ivProfile = itemView.findViewById(R.id.ivProfile);
-            ratingBar = itemView.findViewById(R.id.ratingBar);  // Ensure ratingBar is initialized
+            ratingBar = itemView.findViewById(R.id.ratingBar);
         }
     }
 
     // Update list when search happens
-    public void updateList(List<usermodel> newList) {
+    public void updateList(List<UserModel> newList) {
         userList = newList;
         notifyDataSetChanged();
     }

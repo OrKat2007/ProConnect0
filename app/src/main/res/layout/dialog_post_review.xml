@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- dialog_post_review.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- EditText for Review -->
     <EditText
         android:id="@+id/etReview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Write your review here..."
+        android:hint="Write your review"
         android:inputType="textMultiLine"
-        android:minLines="3" />
+        android:minHeight="100dp" />
 
+    <!-- RatingBar for rating -->
     <RatingBar
         android:id="@+id/ratingBar"
         android:layout_width="wrap_content"
@@ -21,10 +24,12 @@
         android:stepSize="0.5"
         android:rating="0" />
 
+    <!-- Button to post the review -->
     <Button
-        android:id="@+id/btnSubmitReview"
-        android:layout_width="wrap_content"
+        android:id="@+id/btnPostReview"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Submit Review"
-        android:layout_gravity="center" />
+        android:text="Post Review"
+        android:backgroundTint="@color/black"
+        android:textColor="#fff" />
 </LinearLayout>
