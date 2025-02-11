@@ -25,6 +25,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
@@ -144,7 +145,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
     }
 
     private void saveUserToFirestore(String safeEmail, String name, String email, String profession, String location) {
-        String formattedEmail = email.replace("@", "_").replace(".", "_");
+        String formattedEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
 
         // Create a new usermodel instance
         UserModel newUser = new UserModel(formattedEmail, name, email, ispro, profession, location); // 🆕 Initialize with profession

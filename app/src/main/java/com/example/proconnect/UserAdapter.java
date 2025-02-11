@@ -81,7 +81,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.itemView.setOnClickListener(v -> {
             searchProfile profileFragment = new searchProfile();
             Bundle bundle = new Bundle();
-            String formattedEmail = user.getEmail().replace("@", "_").replace(".", "_");
+            String formattedEmail = user.getEmail().toLowerCase().replace("@", "_").replace(".", "_");
             bundle.putString("uid", formattedEmail);
             bundle.putString("userName", user.getName());
             bundle.putString("profession", user.getProfession());

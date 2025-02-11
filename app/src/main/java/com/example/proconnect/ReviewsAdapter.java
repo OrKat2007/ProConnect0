@@ -44,7 +44,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
         // Use the reviewer's email (from the review) to fetch their details from Firestore.
         String reviewerEmail = review.getReviewerEmail();
         // Format the email the same way you did in sign_up (e.g., replace "@" and ".")
-        String formattedEmail = reviewerEmail.replace("@", "_").replace(".", "_");
+        String formattedEmail = reviewerEmail.toLowerCase().replace("@", "_").replace(".", "_");
 
         FirebaseFirestore.getInstance().collection("users")
                 .document(formattedEmail)

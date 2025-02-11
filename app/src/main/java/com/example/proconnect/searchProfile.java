@@ -137,47 +137,51 @@ public class searchProfile extends Fragment {
         String userEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
         if (userEmail == null || professionalUid == null) return;
 
-        String formattedEmail = userEmail.replace("@", "_").replace(".", "_");
+        String formattedEmail = userEmail.toLowerCase().replace("@", "_").replace(".", "_");
         DocumentReference reviewDocRef = db.collection("reviews").document(professionalUid);
         DocumentReference userReviewRef = reviewDocRef.collection("reviewspost").document(formattedEmail);
 
         db.runTransaction(transaction -> {
-            // Fetch the current review document
+            // Fetch the current professional's review document
             DocumentSnapshot reviewDoc = transaction.get(reviewDocRef);
-            DocumentSnapshot userReviewDoc = transaction.get(userReviewRef);
+            // Fetch the review document for this reviewer (if it exists)
+            DocumentSnapshot userReviewDocSnap = transaction.get(userReviewRef);
 
             double ratingsum = 0;
             long ratingcount = 0;
 
             if (reviewDoc.exists()) {
-                ratingsum = reviewDoc.getDouble("ratingsum") != null ? reviewDoc.getDouble("ratingsum") : 0;
-                ratingcount = reviewDoc.getLong("ratingcount") != null ? reviewDoc.getLong("ratingcount") : 0;
+                ratingsum = reviewDoc.getDouble("ratingsum") != null ? reviewDoc.getDouble("ratingsum") : 1;
+                ratingcount = reviewDoc.getLong("ratingcount") != null ? reviewDoc.getLong("ratingcount") : 1;
             }
 
             float oldRating = 0;
-            if (userReviewDoc.exists()) {
-                oldRating = userReviewDoc.getDouble("rating") != null ? userReviewDoc.getDouble("rating").floatValue() : 0;
+            // If the user has not posted a review yet, this is a new review
+            if (!userReviewDocSnap.exists()) {
+                ratingcount++; // increment count for new review
+            } else {
+                oldRating = userReviewDocSnap.getDouble("rating") != null ? userReviewDocSnap.getDouble("rating").floatValue() : 0;
             }
 
-            // Update rating sum correctly
+            // Update ratingsum: subtract the old rating (if any) then add the new rating
             ratingsum = (ratingsum - oldRating) + newRating;
 
-            // Store updated review
+            // Save or update the review document for this reviewer
             ReviewModel review = new ReviewModel(userEmail, reviewText, newRating, System.currentTimeMillis());
             transaction.set(userReviewRef, review);
 
-            // Update main review document with new rating data
-            transaction.update(reviewDocRef, "ratingsum", ratingsum);
-            transaction.update(reviewDocRef, "ratingcount", ratingcount); // Count stays the same
+            // Update the professional's main review document with new rating data
+            transaction.update(reviewDocRef, "ratingsum", ratingsum, "ratingcount", ratingcount);
 
             return null;
         }).addOnSuccessListener(aVoid -> {
             Toast.makeText(getContext(), "Review updated!", Toast.LENGTH_SHORT).show();
             fetchAndDisplayReviews(); // Refresh UI
         }).addOnFailureListener(e -> {
-            Toast.makeText(getContext(), "Error updating review", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Error updating review: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
+
 
 
     private void updateProfessionalRating(float rating) {

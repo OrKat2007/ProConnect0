@@ -86,7 +86,7 @@ public class user_settings extends Fragment {
         }
 
         String email = user.getEmail();
-        String safeEmail = email.replace("@", "_").replace(".", "_");
+        String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
 
         firestore.collection("users").document(safeEmail)
                 .get()
