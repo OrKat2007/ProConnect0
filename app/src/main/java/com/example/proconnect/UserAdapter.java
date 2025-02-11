@@ -81,7 +81,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.itemView.setOnClickListener(v -> {
             searchProfile profileFragment = new searchProfile();
             Bundle bundle = new Bundle();
-            bundle.putString("uid", user.getUid());
+            String formattedEmail = user.getEmail().replace("@", "_").replace(".", "_");
+            bundle.putString("uid", formattedEmail);
             bundle.putString("userName", user.getName());
             bundle.putString("profession", user.getProfession());
             bundle.putString("location", user.getLocation());
@@ -116,18 +117,21 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                 if (task.getResult() != null && task.getResult().exists()) {
                     float ratingSum = task.getResult().getDouble("ratingsum").floatValue();
                     int ratingCount = task.getResult().getLong("ratingcount").intValue();
-
                     if (ratingCount > 0) {
-                        float rating = ratingSum / ratingCount; // Calculate the average rating
-                        ratingBar.setRating(rating); // Set the rating on RatingBar
+                        float rating = ratingSum / ratingCount;
+                        ratingBar.setRating(rating);
                     } else {
-                        ratingBar.setRating(0); // Set rating to 0 if no reviews
+                        ratingBar.setRating(0);
                     }
+                } else {
+                    // Document doesn't exist yet, so set default rating.
+                    ratingBar.setRating(0);
                 }
             } else {
                 Toast.makeText(context, "Failed to fetch rating", Toast.LENGTH_SHORT).show();
             }
         });
+
     }
 
 
