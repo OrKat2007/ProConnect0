@@ -3,11 +3,11 @@ package com.example.proconnect;
 public class MessageModel {
     private String sender;
     private String text;
-    private long timestamp;
+    private com.google.firebase.Timestamp timestamp;
 
     public MessageModel() {} // Firestore requires an empty constructor
 
-    public MessageModel(String sender, String text, long timestamp) {
+    public MessageModel(String sender, String text, com.google.firebase.Timestamp timestamp) {
         this.sender = sender;
         this.text = text;
         this.timestamp = timestamp;
@@ -19,7 +19,7 @@ public class MessageModel {
     public String getText() {
         return text;
     }
-    public long getTimestamp() {
+    public com.google.firebase.Timestamp getTimestamp() {
         return timestamp;
     }
 }

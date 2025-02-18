@@ -34,7 +34,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
 
         // Format timestamp to a human-readable string
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-        holder.tvTimestamp.setText(sdf.format(new Date(message.getTimestamp())));
+        holder.tvTimestamp.setText(sdf.format(message.getTimestamp().toDate()));
+
 
         // Display "You" if the message is sent by current user; otherwise, show sender email
         if (message.getSender().equals(currentUserEmail)) {
