@@ -8,6 +8,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Base64;
@@ -133,11 +134,18 @@ public class searchProfile extends Fragment {
             // Replace the current fragment with Chat_Fragment
             if (getActivity() instanceof AppCompatActivity) {
                 AppCompatActivity activity = (AppCompatActivity) getActivity();
-                activity.getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.frame_layout, chatFragment) // Ensure this is your container ID
-                        .addToBackStack(null)
-                        .commit();
+                FragmentTransaction transaction = activity.getSupportFragmentManager().beginTransaction();
+
+                // Replace the current fragment with ChatFragment
+                transaction.replace(R.id.frame_layout, chatFragment, "CHAT_FRAGMENT");
+
+                // Add this transaction to the back stack so the user can navigate back
+                transaction.addToBackStack(null);
+
+                // Commit the transaction
+                transaction.commit();
             }
+
         });
 
         // After setting up the profile, fetch and display the reviews

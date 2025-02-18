@@ -32,10 +32,13 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
         MessageModel message = messageList.get(position);
         holder.tvMessage.setText(message.getText());
 
-        // Format timestamp to a human-readable string
+        // Format timestamp to a human-readable string using the Timestamp
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-        holder.tvTimestamp.setText(sdf.format(message.getTimestamp().toDate()));
-
+        if (message.getTimestamp() != null) {
+            holder.tvTimestamp.setText(sdf.format(message.getTimestamp().toDate()));
+        } else {
+            holder.tvTimestamp.setText("N/A");
+        }
 
         // Display "You" if the message is sent by current user; otherwise, show sender email
         if (message.getSender().equals(currentUserEmail)) {
@@ -44,6 +47,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
             holder.tvSender.setText(message.getSender());
         }
     }
+
 
     @Override
     public int getItemCount() {

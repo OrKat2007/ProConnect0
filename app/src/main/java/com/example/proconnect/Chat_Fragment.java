@@ -65,25 +65,24 @@ public class Chat_Fragment extends Fragment {
         // Get current user email from FirebaseAuth
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
-            currentUserEmail = currentUser.getEmail().toLowerCase();
+            currentUserEmail = formatEmail(currentUser.getEmail().toLowerCase());
             Log.d("ChatFragment", "Current user email: " + currentUserEmail);
         } else {
             Toast.makeText(getContext(), "User not authenticated", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Retrieve chat partner email from fragment arguments (args2)
-
+        // Retrieve chat partner email from fragment arguments
         Bundle args = getArguments();
         if (args != null) {
-            chatPartnerEmail = args.getString("chatPartnerEmail", "").toLowerCase();
+            chatPartnerEmail = formatEmail(args.getString("chatPartnerEmail", "").toLowerCase());
             Log.d("ChatFragment", "Chat partner email: " + chatPartnerEmail);
         } else {
             Toast.makeText(getContext(), "Chat partner info missing", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Continue with chatId generation...
+        // Generate chat ID consistently
         if (!TextUtils.isEmpty(currentUserEmail) && !TextUtils.isEmpty(chatPartnerEmail)) {
             chatId = currentUserEmail.compareTo(chatPartnerEmail) < 0
                     ? currentUserEmail + "_" + chatPartnerEmail
@@ -94,15 +93,14 @@ public class Chat_Fragment extends Fragment {
             return;
         }
 
-        // Initialize adapter with an empty list and attach to RecyclerView
+        // Initialize adapter
         chatAdapter = new ChatAdapter(new ArrayList<>(), currentUserEmail);
         messagesRecyclerView.setAdapter(chatAdapter);
-        Log.d("ChatFragment", "Adapter attached");
 
         // Create the chat document if it doesn't exist
         createChatIfNotExists();
 
-        // Load chat messages (you might call this after chat creation completes)
+        // Load chat messages
         loadChatMessages();
 
         btnSend.setOnClickListener(v -> {
@@ -113,6 +111,11 @@ public class Chat_Fragment extends Fragment {
             }
         });
     }
+
+    private String formatEmail(String email) {
+        return email.replace("@", "_").replace(".", "_");
+    }
+
 
     private void loadChatMessages() {
         Query messagesQuery = db.collection("chats").document(chatId)
@@ -147,6 +150,7 @@ public class Chat_Fragment extends Fragment {
         Map<String, Object> messageData = new HashMap<>();
         messageData.put("sender", currentUserEmail);
         messageData.put("text", text);
+        // Use FieldValue.serverTimestamp() so Firestore stores a Timestamp object
         messageData.put("timestamp", FieldValue.serverTimestamp());
 
         db.collection("chats").document(chatId)
@@ -159,6 +163,8 @@ public class Chat_Fragment extends Fragment {
                         Toast.makeText(getContext(), "Error sending message: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
     }
+
+
 
     private void createChatIfNotExists() {
         DocumentReference chatRef = db.collection("chats").document(chatId);
