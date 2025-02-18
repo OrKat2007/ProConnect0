@@ -2,21 +2,54 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
     <!-- RecyclerView for displaying chat messages -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/messagesRecyclerView"
+
+    <LinearLayout
+        android:id="@+id/profilecontainer"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/messageContainer"
+        android:layout_height="100dp"
+        android:background="?android:attr/windowBackground"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        app:layout_constraintBottom_toTopOf="@+id/messagesRecyclerView"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/professionalImage"
+            android:layout_width="72dp"
+            android:layout_height="75dp"
+            android:background="@drawable/round_image"
+            android:clipToOutline="true"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/default_profile"
+            android:layout_marginEnd="40dp"/>
+
+        <TextView
+            android:id="@+id/proffesionalName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="40dp"
+            android:text="TextView" />
+    </LinearLayout>
 
     <!-- Message input container -->
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/messagesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/messageContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/profilecontainer" />
+
     <LinearLayout
         android:id="@+id/messageContainer"
         android:layout_width="0dp"

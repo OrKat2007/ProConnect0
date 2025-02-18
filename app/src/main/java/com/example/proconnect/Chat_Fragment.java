@@ -1,15 +1,21 @@
 package com.example.proconnect;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,6 +24,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -40,6 +48,11 @@ public class Chat_Fragment extends Fragment {
     private String currentUserEmail;
     private String chatPartnerEmail;
     private ChatAdapter chatAdapter;
+    private String profileImage = "";
+    private String profession = "";
+    private String location = "";
+    private String userName = "";
+    private String safeuid ="";
 
     public Chat_Fragment() {
         // Required empty public constructor
@@ -57,6 +70,10 @@ public class Chat_Fragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         db = FirebaseFirestore.getInstance();
 
+        // Get views from the inflated layout
+        LinearLayout linearLayout1 = view.findViewById(R.id.profilecontainer);
+        // Make sure this ID is correct in your XML layout
+        ImageButton professionalImage = view.findViewById(R.id.professionalImage);
         messagesRecyclerView = view.findViewById(R.id.messagesRecyclerView);
         messagesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         etMessage = view.findViewById(R.id.etMessage);
@@ -72,14 +89,78 @@ public class Chat_Fragment extends Fragment {
             return;
         }
 
-        // Retrieve chat partner email from fragment arguments
+        // Retrieve chat partner data from arguments
         Bundle args = getArguments();
         if (args != null) {
+
+            profileImage = args.getString("chatPartnerImage", "");
+
+            safeuid = args.getString("chatPartnerUid", "");
             chatPartnerEmail = formatEmail(args.getString("chatPartnerEmail", "").toLowerCase());
+            profession = args.getString("profession", "");
+            location = args.getString("location", "");
+            userName = args.getString("userName", "");
+
             Log.d("ChatFragment", "Chat partner email: " + chatPartnerEmail);
         } else {
             Toast.makeText(getContext(), "Chat partner info missing", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        // Delay image loading until after the view has been laid out
+        view.post(() -> {
+            if (!TextUtils.isEmpty(profileImage) && professionalImage != null) {
+                try {
+                    byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
+                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    Glide.with(linearLayout1)
+                            .load(decodedByte)
+                            .transform(new CircleCrop())
+                            .placeholder(R.drawable.default_profile)
+                            .into(professionalImage);
+                } catch (Exception e) {
+                    // If Base64 decoding fails, try to load the image as a URL
+                    Glide.with(linearLayout1)
+                            .load(profileImage)
+                            .transform(new CircleCrop())
+                            .placeholder(R.drawable.default_profile)
+                            .into(professionalImage);
+                }
+            } else if (professionalImage != null) {
+                Glide.with(linearLayout1)
+                        .load(R.drawable.default_profile)
+                        .transform(new CircleCrop())
+                        .into(professionalImage);
+            } else {
+                Log.e("ChatFragment", "professionalImage is null");
+            }
+        });
+
+        // Set click listener on professionalImage to navigate back to searchProfile
+        if (professionalImage != null) {
+            professionalImage.setOnClickListener(v -> {
+                // Create a new instance of searchProfile fragment
+                searchProfile searchProfileFragment = new searchProfile();
+                // Create a bundle and pass professional data
+                Bundle bundle = new Bundle();
+                // Assuming chatPartnerEmail is the professional's unique identifier.
+                bundle.putString("uid", safeuid);
+                bundle.putString("profileImage", profileImage);
+                // Optionally, pass additional data if available:
+                bundle.putString("profession", profession);
+                bundle.putString("location", location);
+                bundle.putString("userName", userName);
+
+                searchProfileFragment.setArguments(bundle);
+
+                // Replace the current fragment with searchProfile fragment
+                if (getActivity() != null) {
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.frame_layout, searchProfileFragment)
+                            .addToBackStack(null)
+                            .commit();
+                }
+            });
         }
 
         // Generate chat ID consistently
@@ -93,7 +174,7 @@ public class Chat_Fragment extends Fragment {
             return;
         }
 
-        // Initialize adapter
+        // Initialize adapter and set it to the RecyclerView
         chatAdapter = new ChatAdapter(new ArrayList<>(), currentUserEmail);
         messagesRecyclerView.setAdapter(chatAdapter);
 
@@ -103,6 +184,7 @@ public class Chat_Fragment extends Fragment {
         // Load chat messages
         loadChatMessages();
 
+        // Send button click listener
         btnSend.setOnClickListener(v -> {
             String messageText = etMessage.getText().toString().trim();
             if (!TextUtils.isEmpty(messageText)) {
@@ -111,6 +193,9 @@ public class Chat_Fragment extends Fragment {
             }
         });
     }
+
+
+
 
     private String formatEmail(String email) {
         return email.replace("@", "_").replace(".", "_");

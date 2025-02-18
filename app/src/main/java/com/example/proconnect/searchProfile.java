@@ -38,6 +38,10 @@ public class searchProfile extends Fragment {
 
     // Declare professionalUid as a field (or as a local variable accessible throughout onCreateView)
     private String professionalUid = "";  // Ensure it is accessible later
+    private String profileImage = "";
+    private String profession ="";
+    private String location = "";
+    private String userName = "";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -53,10 +57,10 @@ public class searchProfile extends Fragment {
         if (args != null) {
             // Assign to the field variable, not a local variable
             professionalUid = args.getString("uid", "");
-            String profession = args.getString("profession", "Unknown Profession");
-            String location = args.getString("location", "Unknown Location");
-            String userName = args.getString("userName", "Unknown User");
-            String profileImage = args.getString("profileImage");
+            profession = args.getString("profession", "Unknown Profession");
+            location = args.getString("location", "Unknown Location");
+            userName = args.getString("userName", "Unknown User");
+            profileImage = args.getString("profileImage");
             int ratingSum = args.getInt("ratingSum", 0);
             int ratingCount = args.getInt("ratingCount", 0);
 
@@ -105,6 +109,8 @@ public class searchProfile extends Fragment {
         }
 
         // In searchProfile.onCreateView(), after loading profile data:
+
+
         ImageView btnChats = view.findViewById(R.id.btnChats);
         btnChats.setOnClickListener(v -> {
             // Create an instance of Chat_Fragment
@@ -116,6 +122,10 @@ public class searchProfile extends Fragment {
             // Pass the professional's UID (using the field variable that was set above)
 
             chatBundle.putString("chatPartnerUid", professionalUid);
+            chatBundle.putString("chatPartnerImage", profileImage);
+            chatBundle.putString("proffessionalName",userName );
+            chatBundle.putString("proffessionalProfession",profession );
+            chatBundle.putString("proffessionalLocation",location );
 
             // Extract the professional's email from the original arguments
             String professionalEmail = "";
