@@ -112,5 +112,15 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btnPostReview"
             app:layout_constraintBottom_toBottomOf="parent" />
+
+        <ImageView
+            android:id="@+id/btnChats"
+            android:layout_width="78dp"
+            android:layout_height="74dp"
+            android:layout_marginStart="135dp"
+            android:layout_marginTop="189dp"
+            android:src="@drawable/notifications"
+            app:layout_constraintStart_toEndOf="@+id/btnPostReview"
+            app:layout_constraintTop_toBottomOf="@+id/imageView" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

@@ -80,14 +80,14 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         // Handle item click to navigate to the profile fragment
         holder.itemView.setOnClickListener(v -> {
             searchProfile profileFragment = new searchProfile();
-            Bundle bundle = new Bundle();
+            Bundle bundleUserAdapter = new Bundle();
             String formattedEmail = user.getEmail().toLowerCase().replace("@", "_").replace(".", "_");
-            bundle.putString("uid", formattedEmail);
-            bundle.putString("userName", user.getName());
-            bundle.putString("profession", user.getProfession());
-            bundle.putString("location", user.getLocation());
-            bundle.putString("profileImage", user.getProfileImage());
-            profileFragment.setArguments(bundle);
+            bundleUserAdapter.putString("uid", formattedEmail);
+            bundleUserAdapter.putString("userName", user.getName());
+            bundleUserAdapter.putString("profession", user.getProfession());
+            bundleUserAdapter.putString("location", user.getLocation());
+            bundleUserAdapter.putString("profileImage", user.getProfileImage());
+            profileFragment.setArguments(bundleUserAdapter);
 
             if (context instanceof AppCompatActivity) {
                 AppCompatActivity activity = (AppCompatActivity) context;

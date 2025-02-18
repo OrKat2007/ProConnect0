@@ -1,9 +1,12 @@
 package com.example.proconnect;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,7 +24,6 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -33,8 +35,8 @@ import java.util.Map;
 
 public class searchProfile extends Fragment {
 
-    // We now use the professional's UID (passed as "uid") as the key
-    private String professionalUid;
+    // Declare professionalUid as a field (or as a local variable accessible throughout onCreateView)
+    private String professionalUid = "";  // Ensure it is accessible later
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -48,7 +50,8 @@ public class searchProfile extends Fragment {
         // Retrieve the data from the arguments
         Bundle args = getArguments();
         if (args != null) {
-            professionalUid = args.getString("uid"); // Use UID for Firestore document reference
+            // Assign to the field variable, not a local variable
+            professionalUid = args.getString("uid", "");
             String profession = args.getString("profession", "Unknown Profession");
             String location = args.getString("location", "Unknown Location");
             String userName = args.getString("userName", "Unknown User");
@@ -99,6 +102,43 @@ public class searchProfile extends Fragment {
                         .into(profileImageView);
             }
         }
+
+        // In searchProfile.onCreateView(), after loading profile data:
+        ImageView btnChats = view.findViewById(R.id.btnChats);
+        btnChats.setOnClickListener(v -> {
+            // Create an instance of Chat_Fragment
+            Chat_Fragment chatFragment = new Chat_Fragment();
+
+            // Create a new bundle for the Chat_Fragment
+            Bundle chatBundle = new Bundle();
+
+            // Pass the professional's UID (using the field variable that was set above)
+
+            chatBundle.putString("chatPartnerUid", professionalUid);
+
+            // Extract the professional's email from the original arguments
+            String professionalEmail = "";
+            Bundle originalArgs = getArguments();
+            if (originalArgs != null) {
+                professionalEmail = originalArgs.getString("email", "").toLowerCase();
+            }
+            Log.d("SearchProfile", "Professional email: " + professionalUid);
+
+            // Pass it with the key "chatPartnerEmail"
+            chatBundle.putString("chatPartnerEmail", professionalUid);
+
+            // Set the new bundle to the Chat_Fragment
+            chatFragment.setArguments(chatBundle);
+
+            // Replace the current fragment with Chat_Fragment
+            if (getActivity() instanceof AppCompatActivity) {
+                AppCompatActivity activity = (AppCompatActivity) getActivity();
+                activity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.frame_layout, chatFragment) // Ensure this is your container ID
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
 
         // After setting up the profile, fetch and display the reviews
         view.postDelayed(() -> fetchAndDisplayReviews(), 100);
@@ -182,8 +222,6 @@ public class searchProfile extends Fragment {
         });
     }
 
-
-
     private void updateProfessionalRating(float rating) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference professionalDocRef = db.collection("reviews").document(professionalUid);
@@ -232,7 +270,6 @@ public class searchProfile extends Fragment {
                 View view = getView();
                 RatingBar ratingBar = view.findViewById(R.id.ratingBar);
                 ratingBar.setRating(rating);
-
             }
         });
 
@@ -241,7 +278,6 @@ public class searchProfile extends Fragment {
 
         RecyclerView reviewsRecyclerView = view.findViewById(R.id.reviewsRecyclerView);
         if (reviewsRecyclerView == null) return;
-
 
         db.collection("reviews").document(professionalUid)
                 .collection("reviewspost")
@@ -270,6 +306,5 @@ public class searchProfile extends Fragment {
                         Toast.makeText(getContext(), "Error fetching reviews: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
-
     }
 }
