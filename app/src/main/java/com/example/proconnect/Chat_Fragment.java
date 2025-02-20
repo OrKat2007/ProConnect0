@@ -1,6 +1,5 @@
 package com.example.proconnect;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -49,12 +48,12 @@ public class Chat_Fragment extends Fragment {
     private String chatId;
     private String currentUserEmail;
     private String chatPartnerEmail;
-    private ChatAdapter chatAdapter;
+    private MessageAdapter messageAdapter; // Now using MessageAdapter
     private String profileImage = "";
     private String profession = "";
     private String location = "";
     private String userName = "";
-    private String safeuid ="";
+    private String safeuid = "";
 
     public Chat_Fragment() {
     }
@@ -62,6 +61,7 @@ public class Chat_Fragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the fragment layout
         return inflater.inflate(R.layout.fragment_chat_, container, false);
     }
 
@@ -72,7 +72,6 @@ public class Chat_Fragment extends Fragment {
 
         // Get views from the inflated layout
         LinearLayout linearLayout1 = view.findViewById(R.id.profilecontainer);
-        // Make sure this ID is correct in your XML layout
         ImageButton professionalImage = view.findViewById(R.id.professionalImage);
         messagesRecyclerView = view.findViewById(R.id.messagesRecyclerView);
         messagesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -93,15 +92,12 @@ public class Chat_Fragment extends Fragment {
         // Retrieve chat partner data from arguments
         Bundle args = getArguments();
         if (args != null) {
-
             profileImage = args.getString("chatPartnerImage", "");
-
             safeuid = args.getString("chatPartnerUid", "");
             chatPartnerEmail = formatEmail(args.getString("chatPartnerEmail", "").toLowerCase());
             profession = args.getString("profession", "");
             location = args.getString("location", "");
             userName = args.getString("userName", "");
-
             Log.d("ChatFragment", "Chat partner email: " + chatPartnerEmail);
         } else {
             Toast.makeText(getContext(), "Chat partner info missing", Toast.LENGTH_SHORT).show();
@@ -141,22 +137,15 @@ public class Chat_Fragment extends Fragment {
         // Set click listener on professionalImage to navigate back to searchProfile
         if (professionalImage != null) {
             professionalImage.setOnClickListener(v -> {
-                // Create a new instance of searchProfile fragment
-
                 searchProfile searchProfileFragment = new searchProfile();
-                // Create a bundle and pass professional data
                 Bundle bundle = new Bundle();
-                // Assuming chatPartnerEmail is the professional's unique identifier.
                 bundle.putString("uid", safeuid);
                 bundle.putString("profileImage", profileImage);
-                // Optionally, pass additional data if available:
                 bundle.putString("profession", profession);
                 bundle.putString("location", location);
                 bundle.putString("userName", userName);
-
                 searchProfileFragment.setArguments(bundle);
 
-                // Replace the current fragment with searchProfile fragment
                 if (getActivity() != null) {
                     getActivity().getSupportFragmentManager().beginTransaction()
                             .replace(R.id.frame_layout, searchProfileFragment)
@@ -177,12 +166,11 @@ public class Chat_Fragment extends Fragment {
             return;
         }
 
-        // Initialize adapter and set it to the RecyclerView
-        chatAdapter = new ChatAdapter(new ArrayList<>(), currentUserEmail);
-        messagesRecyclerView.setAdapter(chatAdapter);
+        // Initialize MessageAdapter and set it to the RecyclerView
+        messageAdapter = new MessageAdapter(new ArrayList<>(), currentUserEmail);
+        messagesRecyclerView.setAdapter(messageAdapter);
 
         createChatIfNotExists();
-
         loadChatMessages();
 
         btnSend.setOnClickListener(v -> {
@@ -194,13 +182,9 @@ public class Chat_Fragment extends Fragment {
         });
     }
 
-
-
-
     private String formatEmail(String email) {
         return email.replace("@", "_").replace(".", "_");
     }
-
 
     private void loadChatMessages() {
         Query messagesQuery = db.collection("chats").document(chatId)
@@ -211,17 +195,14 @@ public class Chat_Fragment extends Fragment {
                 Log.e("ChatFragment", "Error loading messages", error);
                 return;
             }
-
             if (value != null && !value.isEmpty()) {
                 List<MessageModel> messagesList = new ArrayList<>();
                 for (DocumentSnapshot doc : value.getDocuments()) {
                     MessageModel message = doc.toObject(MessageModel.class);
                     messagesList.add(message);
                 }
-
-                // Update adapter with the new message list
-                if (chatAdapter != null) {
-                    chatAdapter.updateMessages(messagesList);
+                if (messageAdapter != null) {
+                    messageAdapter.updateMessages(messagesList);
                     Log.d("ChatFragment", "Messages updated. Count: " + messagesList.size());
                     messagesRecyclerView.smoothScrollToPosition(messagesList.size() - 1);
                 }
@@ -235,7 +216,6 @@ public class Chat_Fragment extends Fragment {
         Map<String, Object> messageData = new HashMap<>();
         messageData.put("sender", currentUserEmail);
         messageData.put("text", text);
-        // Use FieldValue.serverTimestamp() so Firestore stores a Timestamp object
         messageData.put("timestamp", FieldValue.serverTimestamp());
 
         db.collection("chats").document(chatId)
@@ -248,8 +228,6 @@ public class Chat_Fragment extends Fragment {
                         Toast.makeText(getContext(), "Error sending message: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
     }
-
-
 
     private void createChatIfNotExists() {
         DocumentReference chatRef = db.collection("chats").document(chatId);
@@ -265,7 +243,6 @@ public class Chat_Fragment extends Fragment {
 
                     chatRef.set(chatData).addOnSuccessListener(aVoid -> {
                         Log.d("ChatFragment", "Chat created successfully");
-                        // Optionally delay loading messages to ensure chat creation
                         new Handler(Looper.getMainLooper()).postDelayed(this::loadChatMessages, 100);
                     }).addOnFailureListener(e ->
                             Log.e("ChatFragment", "Failed to create chat", e)

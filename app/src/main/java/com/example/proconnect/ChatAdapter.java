@@ -6,69 +6,100 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.auth.FirebaseAuth;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHolder> {
-    private List<MessageModel> messageList;
-    private String currentUserEmail;
+public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
+    private List<ChatModel> chats;
+    private OnChatClickListener listener;
 
-    public ChatAdapter(List<MessageModel> messageList, String currentUserEmail) {
-        this.messageList = messageList;
-        this.currentUserEmail = currentUserEmail;
+    public ChatAdapter(List<ChatModel> chats) {
+        this.chats = chats;
+    }
+
+    // Interface for handling item clicks
+    public interface OnChatClickListener {
+        void onChatClick(ChatModel chat);
+    }
+
+    public void setOnChatClickListener(OnChatClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
     @Override
-    public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
-        return new MessageViewHolder(view);
+    public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat, parent, false);
+        return new ChatViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        MessageModel message = messageList.get(position);
-        holder.tvMessage.setText(message.getText());
+    public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
+        ChatModel chat = chats.get(position);
 
-        // Format timestamp to a human-readable string using the Timestamp
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-        if (message.getTimestamp() != null) {
-            holder.tvTimestamp.setText(sdf.format(message.getTimestamp().toDate()));
+        // Get the current user's formatted email
+        String currentUserFormattedEmail = formatEmail(
+                FirebaseAuth.getInstance().getCurrentUser().getEmail().toLowerCase()
+        );
+
+        // Determine the "other" user in the chat
+        String otherUser;
+        if (chat.getUser1().equals(currentUserFormattedEmail)) {
+            otherUser = chat.getUser2();
+        } else {
+            otherUser = chat.getUser1();
+        }
+
+        // Display only the other user's email (or name if you have that data)
+        holder.tvChatInfo.setText(otherUser);
+
+        // Format and display the creation timestamp
+        if (chat.getCreatedAt() != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+            holder.tvTimestamp.setText(sdf.format(chat.getCreatedAt().toDate()));
         } else {
             holder.tvTimestamp.setText("N/A");
         }
 
-        // Display "You" if the message is sent by current user; otherwise, show sender email
-        if (message.getSender().equals(currentUserEmail)) {
-            holder.tvSender.setText("You");
+        // Optionally display the last message preview
+        if (chat.getLastMessage() != null) {
+            holder.tvLastMessage.setText(chat.getLastMessage());
         } else {
-            holder.tvSender.setText(message.getSender());
+            holder.tvLastMessage.setText("No messages");
         }
-    }
 
+        // Set a click listener on the entire item view.
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onChatClick(chat);
+            }
+        });
+    }
 
     @Override
     public int getItemCount() {
-        return messageList.size();
+        return chats.size();
     }
 
-    // **New updateMessages method**
-    public void updateMessages(List<MessageModel> newMessages) {
-        this.messageList = newMessages;
-        notifyDataSetChanged(); // Refresh the RecyclerView
+    public void updateChats(List<ChatModel> newChats) {
+        this.chats = newChats;
+        notifyDataSetChanged();
     }
 
-    public static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView tvSender, tvMessage, tvTimestamp;
+    private String formatEmail(String email) {
+        return email.replace("@", "_").replace(".", "_");
+    }
 
-        public MessageViewHolder(@NonNull View itemView) {
+    public static class ChatViewHolder extends RecyclerView.ViewHolder {
+        TextView tvChatInfo, tvTimestamp, tvLastMessage;
+
+        public ChatViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvSender = itemView.findViewById(R.id.tvSender);
-            tvMessage = itemView.findViewById(R.id.tvMessage);
+            tvChatInfo = itemView.findViewById(R.id.tvChatInfo);
             tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
+            tvLastMessage = itemView.findViewById(R.id.tvLastMessage);
         }
     }
 }
-
