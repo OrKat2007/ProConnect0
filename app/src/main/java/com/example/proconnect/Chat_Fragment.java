@@ -16,6 +16,7 @@ import android.widget.EditText;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -44,6 +45,7 @@ public class Chat_Fragment extends Fragment {
     private RecyclerView messagesRecyclerView;
     private EditText etMessage;
     private Button btnSend;
+    private TextView tvproffessionalname;
     private String chatId;
     private String currentUserEmail;
     private String chatPartnerEmail;
@@ -55,13 +57,11 @@ public class Chat_Fragment extends Fragment {
     private String safeuid ="";
 
     public Chat_Fragment() {
-        // Required empty public constructor
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment (make sure your layout file is named fragment_chat_)
         return inflater.inflate(R.layout.fragment_chat_, container, false);
     }
 
@@ -78,6 +78,7 @@ public class Chat_Fragment extends Fragment {
         messagesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         etMessage = view.findViewById(R.id.etMessage);
         btnSend = view.findViewById(R.id.btnSend);
+        tvproffessionalname = view.findViewById(R.id.proffesionalName);
 
         // Get current user email from FirebaseAuth
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -111,6 +112,7 @@ public class Chat_Fragment extends Fragment {
         view.post(() -> {
             if (!TextUtils.isEmpty(profileImage) && professionalImage != null) {
                 try {
+                    tvproffessionalname.setText(userName);
                     byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                     Glide.with(linearLayout1)
@@ -140,6 +142,7 @@ public class Chat_Fragment extends Fragment {
         if (professionalImage != null) {
             professionalImage.setOnClickListener(v -> {
                 // Create a new instance of searchProfile fragment
+
                 searchProfile searchProfileFragment = new searchProfile();
                 // Create a bundle and pass professional data
                 Bundle bundle = new Bundle();
@@ -163,7 +166,7 @@ public class Chat_Fragment extends Fragment {
             });
         }
 
-        // Generate chat ID consistently
+        // Generate chat ID
         if (!TextUtils.isEmpty(currentUserEmail) && !TextUtils.isEmpty(chatPartnerEmail)) {
             chatId = currentUserEmail.compareTo(chatPartnerEmail) < 0
                     ? currentUserEmail + "_" + chatPartnerEmail
@@ -178,13 +181,10 @@ public class Chat_Fragment extends Fragment {
         chatAdapter = new ChatAdapter(new ArrayList<>(), currentUserEmail);
         messagesRecyclerView.setAdapter(chatAdapter);
 
-        // Create the chat document if it doesn't exist
         createChatIfNotExists();
 
-        // Load chat messages
         loadChatMessages();
 
-        // Send button click listener
         btnSend.setOnClickListener(v -> {
             String messageText = etMessage.getText().toString().trim();
             if (!TextUtils.isEmpty(messageText)) {

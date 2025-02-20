@@ -123,9 +123,9 @@ public class searchProfile extends Fragment {
 
             chatBundle.putString("chatPartnerUid", professionalUid);
             chatBundle.putString("chatPartnerImage", profileImage);
-            chatBundle.putString("proffessionalName",userName );
-            chatBundle.putString("proffessionalProfession",profession );
-            chatBundle.putString("proffessionalLocation",location );
+            chatBundle.putString("userName",userName );
+            chatBundle.putString("profession",profession );
+            chatBundle.putString("location",location );
 
             // Extract the professional's email from the original arguments
             String professionalEmail = "";
