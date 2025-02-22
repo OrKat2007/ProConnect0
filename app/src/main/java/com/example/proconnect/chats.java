@@ -66,7 +66,6 @@ public class chats extends Fragment {
             Toast.makeText(getContext(), "User not authenticated", Toast.LENGTH_SHORT).show();
             return;
         }
-
         // Clear previous data.
         chatsList.clear();
 
@@ -82,15 +81,17 @@ public class chats extends Fragment {
                             if (chat != null) {
                                 chat.setChatId(doc.getId());
                                 // Determine partner's email.
+                                // Inside your loadChats() queries when processing each chat:
                                 String partnerEmail = chat.getUser1().equals(currentUserEmail)
                                         ? chat.getUser2() : chat.getUser1();
-                                // Load partner data.
                                 loadUserData(partnerEmail, new OnUserDataLoadedListener() {
                                     @Override
-                                    public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String userName) {
-                                        chat.setOtherUserName(userName != null ? userName : partnerEmail);
+                                    public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String realName) {
+                                        chat.setOtherUserName(realName != null ? realName : partnerEmail);
                                         chat.setOtherUserImage(profileImage != null ? profileImage : "");
                                         chat.setOtherUserUid(uid != null ? uid : "");
+                                        chat.setProfessional(profession != null ? profession : "");
+                                        chat.setLocation(location != null ? location : "");
                                         chatsAdapter.notifyDataSetChanged();
                                     }
 
@@ -99,9 +100,12 @@ public class chats extends Fragment {
                                         chat.setOtherUserName(partnerEmail);
                                         chat.setOtherUserImage("");
                                         chat.setOtherUserUid("");
+                                        chat.setProfessional("");
+                                        chat.setLocation("");
                                         chatsAdapter.notifyDataSetChanged();
                                     }
                                 });
+
                                 chatsList.add(chat);
                             }
                         }
@@ -120,14 +124,17 @@ public class chats extends Fragment {
                             ChatModel chat = doc.toObject(ChatModel.class);
                             if (chat != null) {
                                 chat.setChatId(doc.getId());
+                                // Inside your loadChats() queries when processing each chat:
                                 String partnerEmail = chat.getUser1().equals(currentUserEmail)
                                         ? chat.getUser2() : chat.getUser1();
                                 loadUserData(partnerEmail, new OnUserDataLoadedListener() {
                                     @Override
-                                    public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String userName) {
-                                        chat.setOtherUserName(userName != null ? userName : partnerEmail);
+                                    public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String realName) {
+                                        chat.setOtherUserName(realName != null ? realName : partnerEmail);
                                         chat.setOtherUserImage(profileImage != null ? profileImage : "");
                                         chat.setOtherUserUid(uid != null ? uid : "");
+                                        chat.setProfessional(profession != null ? profession : "");
+                                        chat.setLocation(location != null ? location : "");
                                         chatsAdapter.notifyDataSetChanged();
                                     }
 
@@ -136,9 +143,12 @@ public class chats extends Fragment {
                                         chat.setOtherUserName(partnerEmail);
                                         chat.setOtherUserImage("");
                                         chat.setOtherUserUid("");
+                                        chat.setProfessional("");
+                                        chat.setLocation("");
                                         chatsAdapter.notifyDataSetChanged();
                                     }
                                 });
+
                                 chatsList.add(chat);
                             }
                         }
@@ -161,10 +171,9 @@ public class chats extends Fragment {
         bundle.putString("chatPartnerEmail", partnerEmail);
         bundle.putString("chatPartnerImage", chat.getOtherUserImage());
         bundle.putString("userName", chat.getOtherUserName());
-        // Now pass the partner UID properly.
         bundle.putString("chatPartnerUid", chat.getOtherUserUid());
-        bundle.putString("profession", "");
-        bundle.putString("location", "");
+        bundle.putString("profession", chat.getProfessional());
+        bundle.putString("location", chat.getLocation());
         chatFragment.setArguments(bundle);
 
         if (getActivity() != null) {
@@ -174,6 +183,7 @@ public class chats extends Fragment {
                     .commit();
         }
     }
+
 
     // Callback interface for loading partner details.
     private interface OnUserDataLoadedListener {
@@ -190,13 +200,14 @@ public class chats extends Fragment {
                         String uid = documentSnapshot.getString("uid");
                         String profession = documentSnapshot.getString("profession");
                         String location = documentSnapshot.getString("location");
-                        // Retrieve the real name from the "name" or "userName" field.
-                        String userName = documentSnapshot.getString("userName");
-                        listener.onUserDataLoaded(profileImage, uid, profession, location, userName);
+                        // Retrieve the real name from the "name" field.
+                        String realName = documentSnapshot.getString("name");
+                        listener.onUserDataLoaded(profileImage, uid, profession, location, realName);
                     } else {
                         listener.onError(new Exception("User not found"));
                     }
                 })
                 .addOnFailureListener(listener::onError);
     }
+
 }

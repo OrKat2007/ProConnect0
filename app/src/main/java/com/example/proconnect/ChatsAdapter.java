@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
-
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
@@ -24,7 +23,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
         this.chats = chats;
     }
 
-    // Interface for item clicks.
+    // Interface for handling item clicks.
     public interface OnChatClickListener {
         void onChatClick(ChatModel chat);
     }
@@ -36,7 +35,7 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     @NonNull
     @Override
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Inflate item_chat.xml (ensure it includes an ImageView with id "ivProfile")
+        // Inflate item_chat.xml (which must include an ImageView with id "ivProfile")
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat, parent, false);
         return new ChatViewHolder(view);
     }
@@ -44,10 +43,12 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
         ChatModel chat = chats.get(position);
+        // Display the partner's real name
         holder.tvChatInfo.setText(chat.getOtherUserName());
 
+        // Load the partner's image using Glide.
         String imageString = chat.getOtherUserImage();
-        if (imageString != null && imageString.length() > 200) { // adjust threshold as needed
+        if (imageString != null && imageString.length() > 200) {
             try {
                 // If the string includes a data URI scheme, split out the Base64 part.
                 if (imageString.contains(",")) {
@@ -63,14 +64,12 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
                         .into(holder.ivProfile);
             } catch (Exception e) {
                 e.printStackTrace();
-                // If decoding fails, fallback to default image.
                 Glide.with(holder.itemView.getContext())
                         .load(R.drawable.default_profile)
                         .transform(new CircleCrop())
                         .into(holder.ivProfile);
             }
         } else {
-            // Assume the string is a URL or a short file path.
             Glide.with(holder.itemView.getContext())
                     .load(imageString)
                     .placeholder(R.drawable.default_profile)
@@ -79,26 +78,27 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
                     .into(holder.ivProfile);
         }
 
+        // Format and display timestamp.
         if (chat.getCreatedAt() != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
             holder.tvTimestamp.setText(sdf.format(chat.getCreatedAt().toDate()));
         } else {
             holder.tvTimestamp.setText("N/A");
         }
+        // Display last message if available.
         if (chat.getLastMessage() != null) {
             holder.tvLastMessage.setText(chat.getLastMessage());
         } else {
             holder.tvLastMessage.setText("No messages");
         }
 
-        // Handle click events.
+        // Set click listener.
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onChatClick(chat);
             }
         });
     }
-
 
     @Override
     public int getItemCount() {
