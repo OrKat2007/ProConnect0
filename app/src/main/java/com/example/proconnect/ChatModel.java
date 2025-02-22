@@ -9,6 +9,8 @@ public class ChatModel {
     private Object createdAt; // Allows both Long and Timestamp, similar to MessageModel
     private String lastMessage; // Optional: a preview of the last message
     private String otherUserName; // New field for the display name of the other user
+    private String otherUserImage;
+    private String otherUserUid;
 
     public ChatModel() { }
 
@@ -73,5 +75,21 @@ public class ChatModel {
 
     public void setOtherUserName(String otherUserName) {
         this.otherUserName = otherUserName;
+    }
+
+    public String getOtherUserImage() {
+        return otherUserImage;
+    }
+
+    public void setOtherUserImage(String otherUserImage) {
+        this.otherUserImage = otherUserImage;
+    }
+
+    public String getOtherUserUid() {
+        return otherUserUid;
+    }
+
+    public void setOtherUserUid(String otherUserUid) {
+        this.otherUserUid = otherUserUid;
     }
 }

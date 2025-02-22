@@ -159,7 +159,7 @@ public class searchProfile extends Fragment {
         });
 
         // After setting up the profile, fetch and display the reviews
-        view.postDelayed(() -> fetchAndDisplayReviews(), 100);
+        view.postDelayed(() -> fetchAndDisplayReviews(), 0);
         fetchAndDisplayReviews();
 
         return view;
