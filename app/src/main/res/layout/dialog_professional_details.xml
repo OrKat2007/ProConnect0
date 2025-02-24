@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/gray_rectengle">
+
+    <EditText
+        android:id="@+id/etDialogProfession"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Profession"
+        android:padding="10dp"/>
+
+    <EditText
+        android:id="@+id/etDialogLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Location"
+        android:padding="10dp"/>
+
+    <EditText
+        android:id="@+id/etDialogAvailability"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Available Hours (e.g. 09:00-17:00)"
+        android:padding="10dp"/>
+
+    <Button
+        android:id="@+id/btnDialogOk"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="OK"
+        android:padding="10dp"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>

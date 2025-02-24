@@ -18,11 +18,11 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.proconnect.models.UserModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -38,6 +38,7 @@ public class user_settings extends Fragment {
     private TextView username;
     private Button logout;
     private FirebaseFirestore firestore;
+    private TextView userName, textViewAge, textViewLocation, textViewLanguages, textViewAvailability, textViewRating;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -45,34 +46,58 @@ public class user_settings extends Fragment {
         View view = inflater.inflate(R.layout.fragment_user_settings, container, false);
 
         firestore = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String userId = auth.getCurrentUser().getEmail().replace("@", "_").replace(".", "_");
+
 
         ImageButton profileImage = view.findViewById(R.id.profileImage);
-        profileImage.setOnClickListener(v -> showPictureDialog());
+        Button logout = view.findViewById(R.id.btnLogOut);
+        userName = view.findViewById(R.id.userName);
+        textViewAge = view.findViewById(R.id.textViewAge);
+        textViewLocation = view.findViewById(R.id.textViewLocation);
+        textViewLanguages = view.findViewById(R.id.textViewLanguages);
+        textViewAvailability = view.findViewById(R.id.textViewAvailability);
+        textViewRating = view.findViewById(R.id.textViewRating);
 
-        logout = view.findViewById(R.id.btnLogOut);
-        username = view.findViewById(R.id.userName);
-
-
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null && currentUser.getDisplayName() != null) {
-            username.setText(currentUser.getDisplayName());
+            userName.setText(currentUser.getDisplayName());
         } else {
-            username.setText("Unknown User");
+            userName.setText("Unknown User");
         }
 
         profileImage.setVisibility(View.INVISIBLE);
         loadProfileImage(profileImage);
 
-        logout = view.findViewById(R.id.btnLogOut);
         logout.setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
-            // After signing out, navigate to the login activity or wherever you want the user to go
-            Intent intent = new Intent(getActivity(), login_screen.class); // Replace LoginActivity with your actual login activity
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK); // Clear back stack
+            auth.signOut();
+            Intent intent = new Intent(getActivity(), login_screen.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-            getActivity().finish(); //Finish the current activity so the user can't go back to the settings page without logging in.
+            getActivity().finish();
         });
 
+        firestore.collection("users").document(userId).get().addOnSuccessListener(document -> {
+            if (document.exists()) {
+                textViewAge.setText("Age: " + document.getLong("age"));
+                textViewLocation.setText("Location: " + document.getString("location"));
+                textViewLanguages.setText("Languages: " + document.getString("languages"));
+
+                boolean isPro = document.getBoolean("isPro") != null && document.getBoolean("isPro");
+                if (isPro) {
+                    textViewAvailability.setVisibility(View.VISIBLE);
+                    textViewRating.setVisibility(View.VISIBLE);
+                    textViewAvailability.setText("Availability: " + document.getString("availability"));
+
+                    firestore.collection("reviews").document(userId).get().addOnSuccessListener(reviewDoc -> {
+                        if (reviewDoc.exists()) {
+                            double rating = reviewDoc.getDouble("rating");
+                            textViewRating.setText("Rating: " + rating);
+                        }
+                    });
+                }
+            }
+        });
 
         return view;
     }

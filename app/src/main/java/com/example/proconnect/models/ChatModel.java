@@ -1,4 +1,4 @@
-package com.example.proconnect;
+package com.example.proconnect.models;
 
 import com.google.firebase.Timestamp;
 

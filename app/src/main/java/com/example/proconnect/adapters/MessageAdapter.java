@@ -1,4 +1,4 @@
-package com.example.proconnect;
+package com.example.proconnect.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -6,6 +6,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.proconnect.R;
+import com.example.proconnect.models.MessageModel;
+
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;

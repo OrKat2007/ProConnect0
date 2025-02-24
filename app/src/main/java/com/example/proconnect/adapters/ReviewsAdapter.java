@@ -1,4 +1,4 @@
-package com.example.proconnect;
+package com.example.proconnect.adapters;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,8 +13,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.example.proconnect.R;
+import com.example.proconnect.models.ReviewModel;
 import com.google.firebase.firestore.FirebaseFirestore;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewViewHolder> {
     private List<ReviewModel> reviewList;
@@ -37,11 +42,16 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
         holder.reviewTextView.setText(review.getText());
         holder.reviewRatingBar.setRating(review.getRating());
 
+        // Format the timestamp and set it
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+        String formattedTime = sdf.format(new Date(review.getTimestamp()));
+        holder.tvTimestamp.setText(formattedTime);
+
         // Set temporary placeholder while loading user data
         holder.userNameTextView.setText("Loading...");
         holder.profileImageView.setImageResource(R.drawable.default_profile);
 
-        // Use the reviewer's email (from the review) to fetch their details from Firestore.
+        // Use the reviewer's email to fetch their details from Firestore.
         String reviewerEmail = review.getReviewerEmail();
         // Format the email the same way you did in sign_up (e.g., replace "@" and ".")
         String formattedEmail = reviewerEmail.toLowerCase().replace("@", "_").replace(".", "_");
@@ -88,7 +98,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
     }
 
     public static class ReviewViewHolder extends RecyclerView.ViewHolder {
-        TextView userNameTextView, reviewTextView;
+        TextView userNameTextView, reviewTextView, tvTimestamp;
         RatingBar reviewRatingBar;
         ImageView profileImageView;
 
@@ -98,6 +108,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewVi
             reviewTextView = itemView.findViewById(R.id.reviewTextView);
             reviewRatingBar = itemView.findViewById(R.id.reviewRatingBar);
             profileImageView = itemView.findViewById(R.id.profileImageView);
+            tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.proconnect;
+package com.example.proconnect.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -15,15 +15,16 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.example.proconnect.R;
+import com.example.proconnect.models.UserModel;
+import com.example.proconnect.searchProfile;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.List;
 

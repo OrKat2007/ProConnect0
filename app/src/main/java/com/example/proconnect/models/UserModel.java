@@ -1,4 +1,4 @@
-package com.example.proconnect;
+package com.example.proconnect.models;
 
 public class UserModel {
     private String uid;
@@ -8,6 +8,9 @@ public class UserModel {
     private boolean isProfessional = false;
     private String profession;
     private String location;
+    private int age;
+    private String languages;
+    private String availability;
 
     // Empty constructor required for Firestore
     public UserModel() {}
@@ -79,4 +82,13 @@ public class UserModel {
     public void setLocation(String location) {
         this.location = location;
     }
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+
+    public String getLanguages() { return languages; }
+    public void setLanguages(String languages) { this.languages = languages; }
+
+    public String getAvailability() { return availability; }
+    public void setAvailability(String availability) { this.availability = availability; }
 }

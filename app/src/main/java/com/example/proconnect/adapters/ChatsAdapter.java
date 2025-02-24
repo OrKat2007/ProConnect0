@@ -1,4 +1,4 @@
-package com.example.proconnect;
+package com.example.proconnect.adapters;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +11,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.example.proconnect.R;
+import com.example.proconnect.models.ChatModel;
+
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;

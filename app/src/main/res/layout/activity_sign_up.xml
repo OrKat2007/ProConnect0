@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -24,6 +25,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Username -->
     <EditText
         android:id="@+id/etUserName"
         android:layout_width="306dp"
@@ -41,29 +43,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
-    <EditText
-        android:id="@+id/etEmail"
-        android:layout_width="306dp"
-        android:layout_height="55dp"
-        android:layout_marginStart="52dp"
-        android:layout_marginTop="62dp"
-        android:layout_marginEnd="52dp"
-        android:background="@drawable/gray_rectengle"
-        android:fontFamily="sans-serif-black"
-        android:hint="email:"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
-        android:textColorHint="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etPassWord" />
-
+    <!-- Password -->
     <EditText
         android:id="@+id/etPassWord"
         android:layout_width="306dp"
         android:layout_height="55dp"
         android:layout_marginStart="52dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="20dp"
         android:layout_marginEnd="52dp"
         android:background="@drawable/gray_rectengle"
         android:fontFamily="sans-serif-black"
@@ -76,25 +62,81 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etUserName" />
 
+    <!-- Email -->
+    <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="52dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="email:"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPassWord" />
+
+    <!-- Age -->
+    <EditText
+        android:id="@+id/etAge"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="52dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="age:"
+        android:inputType="number"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
+
+    <!-- Languages -->
+    <EditText
+        android:id="@+id/etLanguage"
+        android:layout_width="306dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="52dp"
+        android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
+        android:hint="languages (e.g. English, Hebrew):"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:textColorHint="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etAge" />
+
+    <!-- Professional / Normal user buttons -->
     <Button
         android:id="@+id/btnPro"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:layout_marginStart="71dp"
-        android:layout_marginTop="58dp"
+        android:layout_marginTop="20dp"
         android:backgroundTint="#606060"
         android:fontFamily="sans-serif-black"
         android:text="professional"
         android:textColor="@color/white"
         android:textSize="17dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
+        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
 
     <Button
         android:id="@+id/btnUser"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
-        android:layout_marginTop="58dp"
+        android:layout_marginTop="20dp"
         android:layout_marginEnd="71dp"
         android:backgroundTint="#606060"
         android:fontFamily="sans-serif-black"
@@ -102,50 +144,15 @@
         android:textColor="@color/white"
         android:textSize="17dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
+        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
 
-    <EditText
-        android:id="@+id/etProffession"
-        android:layout_width="306dp"
-        android:layout_height="55dp"
-        android:layout_marginStart="90dp"
-        android:layout_marginTop="36dp"
-        android:layout_marginEnd="52dp"
-        android:background="@drawable/gray_rectengle"
-        android:fontFamily="sans-serif-black"
-        android:hint="Proffession:"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
-        android:textColorHint="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnPro" />
-
-    <EditText
-        android:id="@+id/etLocation"
-        android:layout_width="306dp"
-        android:layout_height="55dp"
-        android:layout_marginStart="90dp"
-        android:layout_marginTop="130dp"
-        android:layout_marginEnd="52dp"
-        android:background="@drawable/gray_rectengle"
-        android:fontFamily="sans-serif-black"
-        android:hint="Location:"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
-        android:textColorHint="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnPro" />
-
+    <!-- Sign Up -->
     <Button
         android:id="@+id/btnRealSignUp"
         android:layout_width="wrap_content"
         android:layout_height="55dp"
         android:layout_marginStart="153dp"
-        android:layout_marginTop="216dp"
+        android:layout_marginTop="20dp"
         android:layout_marginEnd="153dp"
         android:backgroundTint="#606060"
         android:fontFamily="sans-serif-black"
@@ -157,20 +164,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnPro" />
 
+    <!-- Back Button -->
     <Button
         android:id="@+id/btnBack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="380dp"
         android:layout_marginEnd="356dp"
+        android:layout_marginBottom="6dp"
         android:backgroundTint="#606060"
         android:fontFamily="sans-serif-black"
         android:text="back"
         android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnPro" />
-
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

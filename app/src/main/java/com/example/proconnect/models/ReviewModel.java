@@ -1,4 +1,4 @@
-package com.example.proconnect;
+package com.example.proconnect.models;
 
 public class ReviewModel {
     private String reviewerEmail;  // Email of the reviewer
