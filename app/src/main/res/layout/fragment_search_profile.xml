@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/backgroundgray"
     tools:context=".searchProfile">
-
++
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -17,7 +17,7 @@
             android:layout_width="401dp"
             android:layout_height="117dp"
             android:layout_marginStart="5dp"
-            android:layout_marginTop="80dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="5dp"
             android:src="@drawable/grayrectanglefiller"
             app:layout_constraintEnd_toEndOf="parent"
@@ -67,12 +67,48 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="48dp"
-            android:layout_marginTop="64dp"
+            android:layout_marginTop="20dp"
             android:text="Location:"
             android:textColor="@color/black"
             android:textSize="30dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView" />
+            app:layout_constraintTop_toBottomOf="@+id/Proffessiontv" />
+
+        <TextView
+            android:id="@+id/Agetv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="48dp"
+            android:layout_marginTop="20dp"
+            android:text="Age:"
+            android:textColor="@color/black"
+            android:textSize="30dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/locationtv" />
+
+        <TextView
+            android:id="@+id/languagestv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="48dp"
+            android:layout_marginTop="20dp"
+            android:text="languages:"
+            android:textColor="@color/black"
+            android:textSize="30dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Agetv" />
+
+        <TextView
+            android:id="@+id/availabilitytv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="48dp"
+            android:layout_marginTop="20dp"
+            android:text="availability:"
+            android:textColor="@color/black"
+            android:textSize="30dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/languagestv" />
 
 
         <!-- RecyclerView for reviews -->
@@ -88,7 +124,7 @@
             android:rating="3.5"
             android:stepSize="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/locationtv" />
+            app:layout_constraintTop_toBottomOf="@+id/availabilitytv" />
 
         <Button
             android:id="@+id/btnPostReview"
@@ -120,7 +156,7 @@
             android:layout_height="74dp"
             android:layout_marginStart="135dp"
             android:layout_marginTop="189dp"
-            android:src="@drawable/notifications"
+            android:src="@drawable/chatimgae"
             app:layout_constraintStart_toEndOf="@+id/btnPostReview"
             app:layout_constraintTop_toBottomOf="@+id/imageView" />
     </androidx.constraintlayout.widget.ConstraintLayout>

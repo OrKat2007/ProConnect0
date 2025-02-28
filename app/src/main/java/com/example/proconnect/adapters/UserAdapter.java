@@ -88,6 +88,10 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             bundleUserAdapter.putString("profession", user.getProfession());
             bundleUserAdapter.putString("location", user.getLocation());
             bundleUserAdapter.putString("profileImage", user.getProfileImage());
+            bundleUserAdapter.putInt("age", user.getAge());
+            bundleUserAdapter.putString("languages", user.getLanguages());
+            bundleUserAdapter.putString("availability", user.getAvailability());
+
             profileFragment.setArguments(bundleUserAdapter);
 
             if (context instanceof AppCompatActivity) {

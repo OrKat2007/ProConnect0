@@ -30,6 +30,9 @@ public class chats extends Fragment {
     private ChatsAdapter chatsAdapter;
     private List<ChatModel> chatsList;
     private String currentUserEmail;
+    private int age;
+    private String languages;
+    private String availability;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -175,6 +178,10 @@ public class chats extends Fragment {
         bundle.putString("chatPartnerUid", chat.getOtherUserUid());
         bundle.putString("profession", chat.getProfessional());
         bundle.putString("location", chat.getLocation());
+        bundle.putInt("age", age);
+        bundle.putString("languages", languages);
+        bundle.putString("availability", availability);
+
         chatFragment.setArguments(bundle);
 
         if (getActivity() != null) {
@@ -201,6 +208,10 @@ public class chats extends Fragment {
                         String uid = documentSnapshot.getString("uid");
                         String profession = documentSnapshot.getString("profession");
                         String location = documentSnapshot.getString("location");
+                        age = documentSnapshot.getLong("age").intValue();
+                        languages = documentSnapshot.getString("languages");
+                        availability = documentSnapshot.getString("availability");
+
                         // Retrieve the real name from the "name" field.
                         String realName = documentSnapshot.getString("name");
                         listener.onUserDataLoaded(profileImage, uid, profession, location, realName);

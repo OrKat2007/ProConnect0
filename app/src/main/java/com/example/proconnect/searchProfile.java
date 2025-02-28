@@ -39,6 +39,10 @@ public class searchProfile extends Fragment {
     private String profession = "";
     private String location = "";
     private String userName = "";
+    private Integer age = 0;
+    private String languages = "";
+    private String availability = "";
+
     // Buttons for review and chat
     private Button btnPostReview;
     private ImageView btnChats;
@@ -56,6 +60,10 @@ public class searchProfile extends Fragment {
         TextView locationTextView = view.findViewById(R.id.locationtv);
         RatingBar ratingBar = view.findViewById(R.id.ratingBar);
         ImageView profileImageView = view.findViewById(R.id.profileImage);
+        TextView ageTextView = view.findViewById(R.id.Agetv);
+        TextView languagesTextView = view.findViewById(R.id.languagestv);
+        TextView availabilityTextView = view.findViewById(R.id.availabilitytv);
+
 
         // Retrieve data from arguments
         Bundle args = getArguments();
@@ -65,10 +73,17 @@ public class searchProfile extends Fragment {
             location = args.getString("location", "Unknown Location");
             userName = args.getString("userName", "Unknown User");
             profileImage = args.getString("profileImage", "");
+            age = args.getInt("age", 0);
+            languages = args.getString("languages", "Unknown Languages");
+            availability = args.getString("availability", "Unknown Availability");
+
             int ratingSum = args.getInt("ratingSum", 0);
             int ratingCount = args.getInt("ratingCount", 0);
 
             userNameTextView.setText(userName);
+            ageTextView.setText("Age: " + age);
+            languagesTextView.setText("Languages: " + languages);
+            availabilityTextView.setText("Availability: " + availability);
             professionTextView.setText("Profession: " + profession);
             locationTextView.setText("Location: " + location);
 
@@ -157,6 +172,9 @@ public class searchProfile extends Fragment {
         chatBundle.putString("userName", userName);
         chatBundle.putString("profession", profession);
         chatBundle.putString("location", location);
+        chatBundle.putInt("age", age);
+        chatBundle.putString("languages", languages);
+        chatBundle.putString("availability", availability);
         chatFragment.setArguments(chatBundle);
 
         if (getActivity() != null) {
@@ -167,9 +185,7 @@ public class searchProfile extends Fragment {
         }
     }
 
-    /**
-     * Posts a review with the current timestamp.
-     */
+
     private void postReview(String reviewText, float newRating) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String userEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();

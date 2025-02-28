@@ -73,17 +73,6 @@
             app:layout_constraintTop_toBottomOf="@id/userName" />
 
         <TextView
-            android:id="@+id/textViewLocation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="50dp"
-            android:layout_marginTop="40dp"
-            android:text="Location: "
-            android:textSize="30dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textViewAge" />
-
-        <TextView
             android:id="@+id/textViewLanguages"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -92,7 +81,19 @@
             android:text="Languages: "
             android:textSize="30dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textViewLocation" />
+            app:layout_constraintTop_toBottomOf="@id/textViewAge" />
+
+        <TextView
+            android:id="@+id/textViewLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="50dp"
+            android:layout_marginTop="40dp"
+            android:text="Location: "
+            android:textSize="30dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textViewLanguages" />
 
         <TextView
             android:id="@+id/textViewAvailability"
@@ -102,9 +103,9 @@
             android:layout_marginTop="40dp"
             android:text="Availability: "
             android:textSize="30dp"
-            android:visibility="gone"
+            android:visibility="invisible"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textViewLanguages" />
+            app:layout_constraintTop_toBottomOf="@id/textViewLocation" />
 
         <TextView
             android:id="@+id/textViewRating"
@@ -114,7 +115,7 @@
             android:layout_marginTop="40dp"
             android:text="Rating: "
             android:textSize="30dp"
-            android:visibility="gone"
+            android:visibility="invisible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textViewAvailability" />
 

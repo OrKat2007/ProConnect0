@@ -56,6 +56,9 @@ public class Chat_Fragment extends Fragment {
     private String location = "";
     private String userName = "";
     private String safeuid = "";
+    private int age = 0;
+    private String languages = "";
+    private String availability = "";
 
     public Chat_Fragment() {
     }
@@ -96,10 +99,14 @@ public class Chat_Fragment extends Fragment {
         if (args != null) {
             profileImage = args.getString("chatPartnerImage", "");
             safeuid = args.getString("chatPartnerUid", "");
-            chatPartnerEmail = formatEmail(args.getString("chatPartnerEmail", "").toLowerCase());
+            chatPartnerEmail = formatEmail(args.getString("chatPartnerUid", ""));
             profession = args.getString("profession", "");
             location = args.getString("location", "");
             userName = args.getString("userName", "");
+            age = args.getInt("age", 0);
+            languages = args.getString("languages", "");
+            availability = args.getString("availability", "");
+
             Log.d("ChatFragment", "Chat partner email: " + chatPartnerEmail);
         } else {
             Toast.makeText(getContext(), "Chat partner info missing", Toast.LENGTH_SHORT).show();
@@ -108,7 +115,7 @@ public class Chat_Fragment extends Fragment {
 
         // Delay image loading until after the view has been laid out
         view.post(() -> {
-            if (!TextUtils.isEmpty(profileImage) && professionalImage != null) {
+            if (professionalImage != null) {
                 try {
                     tvproffessionalname.setText(userName);
                     byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
@@ -146,6 +153,10 @@ public class Chat_Fragment extends Fragment {
                 bundle.putString("profession", profession);
                 bundle.putString("location", location);
                 bundle.putString("userName", userName);
+                bundle.putInt("age", age);
+                bundle.putString("languages", languages);
+                bundle.putString("availability", availability);
+
                 searchProfileFragment.setArguments(bundle);
 
                 if (getActivity() != null) {

@@ -1,15 +1,15 @@
 package com.example.proconnect.adapters;
 
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.proconnect.R;
 import com.example.proconnect.models.MessageModel;
-
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
@@ -26,7 +26,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @NonNull
     @Override
     public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_message, parent, false);
         return new MessageViewHolder(view);
     }
 
@@ -43,13 +44,18 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             holder.tvTimestamp.setText("N/A");
         }
 
-        // Display "You" if the message is sent by the current user; otherwise, show sender email
+        // Check if the message was sent by the current user
         if (message.getSender().equals(currentUserEmail)) {
+            // For sent messages, align the message container to the right
+            holder.messageContainer.setGravity(Gravity.END);
             holder.tvSender.setText("You");
         } else {
+            // For received messages, align the container to the left
+            holder.messageContainer.setGravity(Gravity.START);
             holder.tvSender.setText(message.getSender());
         }
     }
+
 
     @Override
     public int getItemCount() {
@@ -64,9 +70,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView tvSender, tvMessage, tvTimestamp;
+        LinearLayout messageContainer;
 
         public MessageViewHolder(@NonNull View itemView) {
             super(itemView);
+            // Make sure your item_message.xml contains a LinearLayout with id messageContainer
+            messageContainer = itemView.findViewById(R.id.messageContainer);
             tvSender = itemView.findViewById(R.id.tvSender);
             tvMessage = itemView.findViewById(R.id.tvMessage);
             tvTimestamp = itemView.findViewById(R.id.tvTimestamp);

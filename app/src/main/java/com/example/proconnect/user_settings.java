@@ -35,6 +35,7 @@ import java.util.Map;
 public class user_settings extends Fragment {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
     private static final int GALLERY = 1, CAMERA = 2;
+    ImageButton profileImage;
     private TextView username;
     private Button logout;
     private FirebaseFirestore firestore;
@@ -49,8 +50,7 @@ public class user_settings extends Fragment {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         String userId = auth.getCurrentUser().getEmail().replace("@", "_").replace(".", "_");
 
-
-        ImageButton profileImage = view.findViewById(R.id.profileImage);
+        profileImage = view.findViewById(R.id.profileImage);
         Button logout = view.findViewById(R.id.btnLogOut);
         userName = view.findViewById(R.id.userName);
         textViewAge = view.findViewById(R.id.textViewAge);
@@ -65,6 +65,10 @@ public class user_settings extends Fragment {
         } else {
             userName.setText("Unknown User");
         }
+
+        profileImage.setOnClickListener(v -> {
+            showPictureDialog();
+        });
 
         profileImage.setVisibility(View.INVISIBLE);
         loadProfileImage(profileImage);
@@ -83,10 +87,11 @@ public class user_settings extends Fragment {
                 textViewLocation.setText("Location: " + document.getString("location"));
                 textViewLanguages.setText("Languages: " + document.getString("languages"));
 
-                boolean isPro = document.getBoolean("isPro") != null && document.getBoolean("isPro");
+                boolean isPro = document.getBoolean("professional") != null && document.getBoolean("professional");
                 if (isPro) {
                     textViewAvailability.setVisibility(View.VISIBLE);
                     textViewRating.setVisibility(View.VISIBLE);
+                    textViewLocation.setVisibility(View.VISIBLE);
                     textViewAvailability.setText("Availability: " + document.getString("availability"));
 
                     firestore.collection("reviews").document(userId).get().addOnSuccessListener(reviewDoc -> {
@@ -169,7 +174,7 @@ public class user_settings extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        ImageButton profileImage = getView().findViewById(R.id.profileImage);
+        profileImage = getView().findViewById(R.id.profileImage);
 
         if (resultCode == getActivity().RESULT_OK && data != null) {
             if (requestCode == GALLERY) {
