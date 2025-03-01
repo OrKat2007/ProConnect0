@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -29,7 +31,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class user_settings extends Fragment {
@@ -60,7 +67,6 @@ public class user_settings extends Fragment {
         textViewRating = view.findViewById(R.id.textViewRating);
         textViewProfession = view.findViewById(R.id.textViewProfession);
 
-
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null && currentUser.getDisplayName() != null) {
             userName.setText(currentUser.getDisplayName());
@@ -68,10 +74,7 @@ public class user_settings extends Fragment {
             userName.setText("Unknown User");
         }
 
-        profileImage.setOnClickListener(v -> {
-            showPictureDialog();
-        });
-
+        profileImage.setOnClickListener(v -> showPictureDialog());
         profileImage.setVisibility(View.INVISIBLE);
         loadProfileImage(profileImage);
 
@@ -86,7 +89,13 @@ public class user_settings extends Fragment {
         firestore.collection("users").document(userId).get().addOnSuccessListener(document -> {
             if (document.exists()) {
                 textViewProfession.setText("Profession: " + document.getString("profession"));
-                textViewAge.setText("Age: " + document.getLong("age"));
+                String dob = document.getString("dob");
+                if (dob != null && !dob.isEmpty()) {
+                    int calculatedAge = calculateAge(dob);
+                    textViewAge.setText("Age: " + calculatedAge);
+                } else {
+                    textViewAge.setText("Age: N/A");
+                }
                 textViewLocation.setText("Location: " + document.getString("location"));
                 textViewLanguages.setText("Languages: " + document.getString("languages"));
 
@@ -113,17 +122,32 @@ public class user_settings extends Fragment {
         return view;
     }
 
+    private int calculateAge(String dobString) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        try {
+            Date dob = sdf.parse(dobString);
+            Calendar dobCal = Calendar.getInstance();
+            dobCal.setTime(dob);
+            Calendar today = Calendar.getInstance();
+            int age = today.get(Calendar.YEAR) - dobCal.get(Calendar.YEAR);
+            if (today.get(Calendar.DAY_OF_YEAR) < dobCal.get(Calendar.DAY_OF_YEAR)) {
+                age--;
+            }
+            return age;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     private void loadProfileImage(ImageButton profileImage) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
         if (user == null) {
             profileImage.setVisibility(View.VISIBLE);
             return;
         }
-
         String email = user.getEmail();
         String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
-
         firestore.collection("users").document(safeEmail)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -179,9 +203,7 @@ public class user_settings extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         profileImage = getView().findViewById(R.id.profileImage);
-
         if (resultCode == getActivity().RESULT_OK && data != null) {
             if (requestCode == GALLERY) {
                 try {
@@ -222,13 +244,10 @@ public class user_settings extends Fragment {
     private void saveImageToFirestore(String encodedImage) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
-
         String email = user.getEmail();
         String safeEmail = email.replace("@", "_").replace(".", "_");
-
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("profileImage", encodedImage);
-
         firestore.collection("users").document(safeEmail)
                 .update(updateData)
                 .addOnSuccessListener(aVoid -> Log.d("Firestore", "Profile image updated successfully"))

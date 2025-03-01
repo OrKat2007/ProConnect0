@@ -81,25 +81,41 @@
         app:layout_constraintTop_toBottomOf="@+id/etPassWord" />
 
     <!-- Age -->
-    <EditText
-        android:id="@+id/etAge"
-        android:layout_width="306dp"
-        android:layout_height="55dp"
-        android:layout_marginStart="52dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="52dp"
-        android:background="@drawable/gray_rectengle"
-        android:fontFamily="sans-serif-black"
-        android:hint="age:"
-        android:inputType="number"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
-        android:textColorHint="@color/black"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
 
     <!-- Languages -->
+
+    <Button
+        android:id="@+id/etAgebtn"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="24dp"
+        android:backgroundTint="#606060"
+        android:fontFamily="sans-serif-black"
+        android:gravity="center"
+        android:hint="pick date"
+        android:inputType="date"
+        android:textColorHint="@color/black"
+        android:textSize="15dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
+
+    <TextView
+        android:id="@+id/birthdatetv"
+        android:layout_width="230dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="68dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/gray_rectengle"
+        android:gravity="left|center"
+        android:paddingLeft="30dp"
+        android:fontFamily="sans-serif-black"
+        android:textSize="17dp"
+        android:textColor="@color/black"
+        android:text="Birthdate: "
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
+
     <EditText
         android:id="@+id/etLanguage"
         android:layout_width="306dp"
@@ -115,7 +131,7 @@
         android:textColorHint="@color/black"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etAge" />
+        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
 
     <!-- Professional / Normal user buttons -->
     <Button
@@ -130,7 +146,7 @@
         android:textColor="@color/white"
         android:textSize="17dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
+        app:layout_constraintTop_toBottomOf="@+id/etAgebtn" />
 
     <Button
         android:id="@+id/btnUser"
@@ -144,7 +160,7 @@
         android:textColor="@color/white"
         android:textSize="17dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
+        app:layout_constraintTop_toBottomOf="@+id/etAgebtn" />
 
     <!-- Sign Up -->
     <Button
@@ -180,5 +196,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

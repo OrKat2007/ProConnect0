@@ -30,8 +30,14 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class searchProfile extends Fragment {
 
@@ -43,6 +49,7 @@ public class searchProfile extends Fragment {
     private Integer age = 0;
     private String languages = "";
     private String availability = "";
+    private String dob;
 
     // Buttons for review and chat
     private Button btnPostReview;
@@ -75,6 +82,7 @@ public class searchProfile extends Fragment {
             userName = args.getString("userName", "Unknown User");
             profileImage = args.getString("profileImage", "");
             age = args.getInt("age", 0);
+            dob = args.getString("dob", "");
             languages = args.getString("languages", "Unknown Languages");
             availability = args.getString("availability", "None");
 
@@ -100,6 +108,7 @@ public class searchProfile extends Fragment {
                 reviewsRecyclerView.setVisibility(View.GONE);
             }
 
+            int age = calculateAge(dob);
             userNameTextView.setText(userName);
             ageTextView.setText("Age: " + age);
             languagesTextView.setText("Languages: " + languages);
@@ -158,6 +167,24 @@ public class searchProfile extends Fragment {
         return view;
     }
 
+    private int calculateAge(String dobString) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        try {
+            Date dob = sdf.parse(dobString);
+            Calendar dobCal = Calendar.getInstance();
+            dobCal.setTime(dob);
+            Calendar today = Calendar.getInstance();
+            int age = today.get(Calendar.YEAR) - dobCal.get(Calendar.YEAR);
+            if (today.get(Calendar.DAY_OF_YEAR) < dobCal.get(Calendar.DAY_OF_YEAR)) {
+                age--;
+            }
+            return age;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     public void showPostReviewDialog() {
         Dialog reviewDialog = new Dialog(getActivity());
         reviewDialog.setContentView(R.layout.dialog_post_review);
@@ -191,6 +218,7 @@ public class searchProfile extends Fragment {
         chatBundle.putString("profession", profession);
         chatBundle.putString("location", location);
         chatBundle.putInt("age", age);
+        chatBundle.putInt("dob", age);
         chatBundle.putString("languages", languages);
         chatBundle.putString("availability", availability);
         chatFragment.setArguments(chatBundle);

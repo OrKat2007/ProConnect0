@@ -87,6 +87,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             bundleUserAdapter.putString("userName", user.getName());
             bundleUserAdapter.putString("profession", user.getProfession());
             bundleUserAdapter.putString("location", user.getLocation());
+            bundleUserAdapter.putString("dob", user.getDob());
             bundleUserAdapter.putString("profileImage", user.getProfileImage());
             bundleUserAdapter.putInt("age", user.getAge());
             bundleUserAdapter.putString("languages", user.getLanguages());

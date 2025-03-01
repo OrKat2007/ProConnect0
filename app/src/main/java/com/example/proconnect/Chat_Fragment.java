@@ -59,6 +59,7 @@ public class Chat_Fragment extends Fragment {
     private int age = 0;
     private String languages = "";
     private String availability = "";
+    private String dob;
 
     public Chat_Fragment() {
     }
@@ -104,6 +105,7 @@ public class Chat_Fragment extends Fragment {
             location = args.getString("location", "");
             userName = args.getString("userName", "");
             age = args.getInt("age", 0);
+            dob = args.getString("dob", "");
             languages = args.getString("languages", "");
             availability = args.getString("availability", "");
 
@@ -153,6 +155,7 @@ public class Chat_Fragment extends Fragment {
                 bundle.putString("profession", profession);
                 bundle.putString("location", location);
                 bundle.putString("userName", userName);
+                bundle.putString("dob", dob);
                 bundle.putInt("age", age);
                 bundle.putString("languages", languages);
                 bundle.putString("availability", availability);

@@ -11,6 +11,7 @@ public class UserModel {
     private int age;
     private String languages;
     private String availability;
+    private String dob;
 
     // Empty constructor required for Firestore
     public UserModel() {}
@@ -91,4 +92,11 @@ public class UserModel {
 
     public String getAvailability() { return availability; }
     public void setAvailability(String availability) { this.availability = availability; }
+
+    public String getDob() {
+        return dob;
+    }
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
 }
