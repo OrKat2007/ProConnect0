@@ -39,7 +39,7 @@ public class user_settings extends Fragment {
     private TextView username;
     private Button logout;
     private FirebaseFirestore firestore;
-    private TextView userName, textViewAge, textViewLocation, textViewLanguages, textViewAvailability, textViewRating;
+    private TextView userName, textViewAge, textViewLocation, textViewLanguages, textViewAvailability, textViewRating, textViewProfession;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -58,6 +58,8 @@ public class user_settings extends Fragment {
         textViewLanguages = view.findViewById(R.id.textViewLanguages);
         textViewAvailability = view.findViewById(R.id.textViewAvailability);
         textViewRating = view.findViewById(R.id.textViewRating);
+        textViewProfession = view.findViewById(R.id.textViewProfession);
+
 
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null && currentUser.getDisplayName() != null) {
@@ -83,12 +85,14 @@ public class user_settings extends Fragment {
 
         firestore.collection("users").document(userId).get().addOnSuccessListener(document -> {
             if (document.exists()) {
+                textViewProfession.setText("Profession: " + document.getString("profession"));
                 textViewAge.setText("Age: " + document.getLong("age"));
                 textViewLocation.setText("Location: " + document.getString("location"));
                 textViewLanguages.setText("Languages: " + document.getString("languages"));
 
                 boolean isPro = document.getBoolean("professional") != null && document.getBoolean("professional");
                 if (isPro) {
+                    textViewProfession.setVisibility(View.VISIBLE);
                     textViewAvailability.setVisibility(View.VISIBLE);
                     textViewRating.setVisibility(View.VISIBLE);
                     textViewLocation.setVisibility(View.VISIBLE);
@@ -96,7 +100,9 @@ public class user_settings extends Fragment {
 
                     firestore.collection("reviews").document(userId).get().addOnSuccessListener(reviewDoc -> {
                         if (reviewDoc.exists()) {
-                            double rating = reviewDoc.getDouble("rating");
+                            double ratingsum = reviewDoc.getDouble("ratingsum");
+                            int ratingcount = reviewDoc.getLong("ratingcount").intValue();
+                            double rating = ratingsum / ratingcount;
                             textViewRating.setText("Rating: " + rating);
                         }
                     });

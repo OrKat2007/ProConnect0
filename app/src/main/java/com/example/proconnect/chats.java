@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.proconnect.adapters.ChatsAdapter;
 import com.example.proconnect.models.ChatModel;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -43,7 +44,6 @@ public class chats extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate fragment_chats.xml
         return inflater.inflate(R.layout.fragment_chats, container, false);
     }
 
@@ -56,7 +56,6 @@ public class chats extends Fragment {
         chatsAdapter = new ChatsAdapter(chatsList);
         chatsRecyclerView.setAdapter(chatsAdapter);
 
-        // Set click listener to launch Chat_Fragment when an item is tapped.
         chatsAdapter.setOnChatClickListener(chat -> launchChatFragment(chat));
 
         loadChats();
@@ -70,102 +69,68 @@ public class chats extends Fragment {
             Toast.makeText(getContext(), "User not authenticated", Toast.LENGTH_SHORT).show();
             return;
         }
-        // Clear previous data.
+
         chatsList.clear();
 
-        // Query for chats where current user is user1.
-        db.collection("chats")
+        Query query1 = db.collection("chats")
                 .whereEqualTo("user1", currentUserEmail)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        for (DocumentSnapshot doc : task.getResult()) {
-                            ChatModel chat = doc.toObject(ChatModel.class);
-                            if (chat != null) {
-                                chat.setChatId(doc.getId());
-                                // Determine partner's email.
-                                // Inside your loadChats() queries when processing each chat:
-                                String partnerEmail = chat.getUser1().equals(currentUserEmail)
-                                        ? chat.getUser2() : chat.getUser1();
-                                loadUserData(partnerEmail, new OnUserDataLoadedListener() {
-                                    @Override
-                                    public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String realName) {
-                                        chat.setOtherUserName(realName != null ? realName : partnerEmail);
-                                        chat.setOtherUserImage(profileImage != null ? profileImage : "");
-                                        chat.setOtherUserUid(uid != null ? uid : "");
-                                        chat.setProfessional(profession != null ? profession : "");
-                                        chat.setLocation(location != null ? location : "");
-                                        chatsAdapter.notifyDataSetChanged();
-                                    }
+                .orderBy("createdAt", Query.Direction.DESCENDING);
 
-                                    @Override
-                                    public void onError(Exception e) {
-                                        chat.setOtherUserName(partnerEmail);
-                                        chat.setOtherUserImage("");
-                                        chat.setOtherUserUid("");
-                                        chat.setProfessional("");
-                                        chat.setLocation("");
-                                        chatsAdapter.notifyDataSetChanged();
-                                    }
-                                });
-
-                                chatsList.add(chat);
-                            }
-                        }
-                        chatsAdapter.updateChats(chatsList);
-                    }
-                });
-
-        // Query for chats where current user is user2.
-        db.collection("chats")
+        Query query2 = db.collection("chats")
                 .whereEqualTo("user2", currentUserEmail)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        for (DocumentSnapshot doc : task.getResult()) {
-                            ChatModel chat = doc.toObject(ChatModel.class);
-                            if (chat != null) {
-                                chat.setChatId(doc.getId());
-                                // Inside your loadChats() queries when processing each chat:
-                                String partnerEmail = chat.getUser1().equals(currentUserEmail)
-                                        ? chat.getUser2() : chat.getUser1();
-                                loadUserData(partnerEmail, new OnUserDataLoadedListener() {
-                                    @Override
-                                    public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String realName) {
-                                        chat.setOtherUserName(realName != null ? realName : partnerEmail);
-                                        chat.setOtherUserImage(profileImage != null ? profileImage : "");
-                                        chat.setOtherUserUid(uid != null ? uid : "");
-                                        chat.setProfessional(profession != null ? profession : "");
-                                        chat.setLocation(location != null ? location : "");
-                                        chatsAdapter.notifyDataSetChanged();
-                                    }
+                .orderBy("createdAt", Query.Direction.DESCENDING);
 
-                                    @Override
-                                    public void onError(Exception e) {
-                                        chat.setOtherUserName(partnerEmail);
-                                        chat.setOtherUserImage("");
-                                        chat.setOtherUserUid("");
-                                        chat.setProfessional("");
-                                        chat.setLocation("");
-                                        chatsAdapter.notifyDataSetChanged();
-                                    }
-                                });
+        query1.get().addOnCompleteListener(task -> handleChatQueryResult(task));
+        query2.get().addOnCompleteListener(task -> handleChatQueryResult(task));
+    }
 
-                                chatsList.add(chat);
-                            }
+    private void handleChatQueryResult(com.google.android.gms.tasks.Task<com.google.firebase.firestore.QuerySnapshot> task) {
+        if (task.isSuccessful() && task.getResult() != null) {
+            for (DocumentSnapshot doc : task.getResult()) {
+                ChatModel chat = doc.toObject(ChatModel.class);
+                if (chat != null) {
+                    chat.setChatId(doc.getId());
+                    doc.getString("LastMessage");
+                    chat.setLastMessage(doc.getString("LastMessage"));
+                    Timestamp timestamp = doc.getTimestamp("LastMessageTimestamp");
+                    long lastMessageTimestamp = (timestamp != null) ? timestamp.toDate().getTime() : 0;
+                    chat.setLastMessageTimestamp(lastMessageTimestamp);
+
+                    String partnerEmail = chat.getUser1().equals(currentUserEmail)
+                            ? chat.getUser2() : chat.getUser1();
+                    loadUserData(partnerEmail, new OnUserDataLoadedListener() {
+                        @Override
+                        public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String realName) {
+                            chat.setOtherUserName(realName != null ? realName : partnerEmail);
+                            chat.setOtherUserImage(profileImage != null ? profileImage : "");
+                            chat.setOtherUserUid(uid != null ? uid : "");
+                            chat.setProfessional(profession != null ? profession : "");
+                            chat.setLocation(location != null ? location : "");
+                            chatsAdapter.notifyDataSetChanged();
                         }
-                        chatsAdapter.updateChats(chatsList);
-                    }
-                });
+
+                        @Override
+                        public void onError(Exception e) {
+                            chat.setOtherUserName(partnerEmail);
+                            chat.setOtherUserImage("");
+                            chat.setOtherUserUid("");
+                            chat.setProfessional("");
+                            chat.setLocation("");
+                            chatsAdapter.notifyDataSetChanged();
+                        }
+                    });
+
+                    chatsList.add(chat);
+                }
+            }
+            chatsAdapter.updateChats(chatsList);
+        }
     }
 
     private String formatEmail(String email) {
         return email.replace("@", "_").replace(".", "_").toLowerCase();
     }
 
-    // Launch Chat_Fragment and pass along the chat data and partner details.
     private void launchChatFragment(ChatModel chat) {
         Chat_Fragment chatFragment = new Chat_Fragment();
         Bundle bundle = new Bundle();
@@ -192,14 +157,11 @@ public class chats extends Fragment {
         }
     }
 
-
-    // Callback interface for loading partner details.
     private interface OnUserDataLoadedListener {
         void onUserDataLoaded(String profileImage, String uid, String profession, String location, String userName);
         void onError(Exception e);
     }
 
-    // Load partner details from the "users" collection using the partner's formatted email.
     private void loadUserData(String email, OnUserDataLoadedListener listener) {
         db.collection("users").document(email).get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -212,7 +174,6 @@ public class chats extends Fragment {
                         languages = documentSnapshot.getString("languages");
                         availability = documentSnapshot.getString("availability");
 
-                        // Retrieve the real name from the "name" field.
                         String realName = documentSnapshot.getString("name");
                         listener.onUserDataLoaded(profileImage, uid, profession, location, realName);
                     } else {
@@ -221,5 +182,4 @@ public class chats extends Fragment {
                 })
                 .addOnFailureListener(listener::onError);
     }
-
 }

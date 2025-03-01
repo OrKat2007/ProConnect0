@@ -51,16 +51,41 @@
             app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
         <TextView
-            android:id="@+id/Proffessiontv"
+            android:id="@+id/Agetv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="48dp"
             android:layout_marginTop="0dp"
-            android:text="Profession:"
+            android:text="Age:"
             android:textColor="@color/black"
             android:textSize="30dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+        <TextView
+            android:id="@+id/languagestv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="48dp"
+            android:layout_marginTop="20dp"
+            android:text="Languages:"
+            android:textColor="@color/black"
+            android:textSize="30dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/Agetv" />
+
+        <TextView
+            android:id="@+id/Proffessiontv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="48dp"
+            android:layout_marginTop="20dp"
+            android:text="Proffession::"
+            android:visibility="invisible"
+            android:textColor="@color/black"
+            android:textSize="30dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/languagestv" />
 
         <TextView
             android:id="@+id/locationtv"
@@ -69,34 +94,11 @@
             android:layout_marginStart="48dp"
             android:layout_marginTop="20dp"
             android:text="Location:"
+            android:visibility="invisible"
             android:textColor="@color/black"
             android:textSize="30dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/Proffessiontv" />
-
-        <TextView
-            android:id="@+id/Agetv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="48dp"
-            android:layout_marginTop="20dp"
-            android:text="Age:"
-            android:textColor="@color/black"
-            android:textSize="30dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/locationtv" />
-
-        <TextView
-            android:id="@+id/languagestv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="48dp"
-            android:layout_marginTop="20dp"
-            android:text="languages:"
-            android:textColor="@color/black"
-            android:textSize="30dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/Agetv" />
 
         <TextView
             android:id="@+id/availabilitytv"
@@ -105,10 +107,11 @@
             android:layout_marginStart="48dp"
             android:layout_marginTop="20dp"
             android:text="availability:"
+            android:visibility="invisible"
             android:textColor="@color/black"
             android:textSize="30dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/languagestv" />
+            app:layout_constraintTop_toBottomOf="@+id/locationtv" />
 
 
         <!-- RecyclerView for reviews -->
@@ -120,6 +123,7 @@
             android:layout_marginTop="28dp"
             android:isIndicator="true"
             android:progressTint="@color/gold"
+            android:visibility="invisible"
             android:numStars="5"
             android:rating="3.5"
             android:stepSize="0.5"
@@ -128,6 +132,7 @@
 
         <Button
             android:id="@+id/btnPostReview"
+            android:visibility="invisible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="40dp"
@@ -142,6 +147,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/reviewsRecyclerView"
+            android:visibility="invisible"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="17dp"
@@ -154,10 +160,10 @@
             android:id="@+id/btnChats"
             android:layout_width="78dp"
             android:layout_height="74dp"
-            android:layout_marginStart="135dp"
             android:layout_marginTop="189dp"
+            android:layout_marginEnd="23dp"
             android:src="@drawable/chatimgae"
-            app:layout_constraintStart_toEndOf="@+id/btnPostReview"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

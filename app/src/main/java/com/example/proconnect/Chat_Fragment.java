@@ -240,6 +240,10 @@ public class Chat_Fragment extends Fragment {
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Error sending message: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
+
+        DocumentReference chatRef = db.collection("chats").document(chatId);
+        chatRef.update("LastMessage", text);
+        chatRef.update("LastMessageTimestamp", FieldValue.serverTimestamp());
     }
 
     private void createChatIfNotExists() {
@@ -253,6 +257,8 @@ public class Chat_Fragment extends Fragment {
                     chatData.put("user1", currentUserEmail);
                     chatData.put("user2", chatPartnerEmail);
                     chatData.put("createdAt", FieldValue.serverTimestamp());
+                    chatData.put("LastMessage", "No messages yet");
+                    chatData.put("LastMessageTimestamp", "No timestamp yet");
 
                     chatRef.set(chatData).addOnSuccessListener(aVoid -> {
                         Log.d("ChatFragment", "Chat created successfully");

@@ -8,16 +8,17 @@ public class ChatModel {
     private String user2;
     private Object createdAt; // Allows both Long and Timestamp
     private String lastMessage; // Optional preview of last message
+    private Object lastMessageTimestamp; // New field for last message timestamp
 
     // Fields to store partner details loaded from Firestore
     private String otherUserName;
     private String otherUserImage;
     private String otherUserUid;
     private String professional; // New field for professional
-    private String location;// New field for location
-    private String languages; // New field for languages
+    private String location;     // New field for location
+    private String languages;    // New field for languages
     private String availability; // New field for availability
-    private Integer age; // New field for age
+    private Integer age;         // New field for age
 
     // No-argument constructor required by Firestore
     public ChatModel() { }
@@ -67,7 +68,21 @@ public class ChatModel {
         this.lastMessage = lastMessage;
     }
 
-    // New getters and setters
+    // New getter and setter for lastMessageTimestamp
+    public Timestamp getLastMessageTimestamp() {
+        if (lastMessageTimestamp instanceof Timestamp) {
+            return (Timestamp) lastMessageTimestamp;
+        } else if (lastMessageTimestamp instanceof Long) {
+            return new Timestamp(((Long) lastMessageTimestamp) / 1000, 0);
+        } else {
+            return null;
+        }
+    }
+    public void setLastMessageTimestamp(Object lastMessageTimestamp) {
+        this.lastMessageTimestamp = lastMessageTimestamp;
+    }
+
+    // New getters and setters for additional fields
     public String getOtherUserName() {
         return otherUserName;
     }
@@ -98,27 +113,21 @@ public class ChatModel {
     public void setLocation(String location) {
         this.location = location;
     }
-
     public String getLanguages() {
         return languages;
     }
-
     public void setLanguages(String languages) {
         this.languages = languages;
     }
-
     public String getAvailability() {
         return availability;
     }
-
     public void setAvailability(String availability) {
         this.availability = availability;
     }
-
     public Integer getAge() {
         return age;
     }
-
     public void setAge(Integer age) {
         this.age = age;
     }

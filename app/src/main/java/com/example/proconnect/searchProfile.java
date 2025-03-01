@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -53,6 +54,7 @@ public class searchProfile extends Fragment {
         View view = inflater.inflate(R.layout.fragment_search_profile, container, false);
 
         // Retrieve view references
+        RecyclerView reviewsRecyclerView = view.findViewById(R.id.reviewsRecyclerView);
         btnPostReview = view.findViewById(R.id.btnPostReview);
         btnChats = view.findViewById(R.id.btnChats);
         TextView userNameTextView = view.findViewById(R.id.userName);
@@ -64,21 +66,39 @@ public class searchProfile extends Fragment {
         TextView languagesTextView = view.findViewById(R.id.languagestv);
         TextView availabilityTextView = view.findViewById(R.id.availabilitytv);
 
-
         // Retrieve data from arguments
         Bundle args = getArguments();
         if (args != null) {
             professionalUid = args.getString("uid", "");
-            profession = args.getString("profession", "Unknown Profession");
-            location = args.getString("location", "Unknown Location");
+            profession = args.getString("profession", "None");
+            location = args.getString("location", "None");
             userName = args.getString("userName", "Unknown User");
             profileImage = args.getString("profileImage", "");
             age = args.getInt("age", 0);
             languages = args.getString("languages", "Unknown Languages");
-            availability = args.getString("availability", "Unknown Availability");
+            availability = args.getString("availability", "None");
 
             int ratingSum = args.getInt("ratingSum", 0);
             int ratingCount = args.getInt("ratingCount", 0);
+
+            // Check if this is a professional profile
+            if (profession != null && !profession.equalsIgnoreCase("None") && !profession.isEmpty()) {
+                // Show pro-only fields
+                professionTextView.setVisibility(View.VISIBLE);
+                locationTextView.setVisibility(View.VISIBLE);
+                availabilityTextView.setVisibility(View.VISIBLE);
+                ratingBar.setVisibility(View.VISIBLE);
+                btnPostReview.setVisibility(View.VISIBLE);
+                reviewsRecyclerView.setVisibility(View.VISIBLE);
+            } else {
+                // Hide pro-only fields
+                professionTextView.setVisibility(View.GONE);
+                locationTextView.setVisibility(View.GONE);
+                availabilityTextView.setVisibility(View.GONE);
+                ratingBar.setVisibility(View.GONE);
+                btnPostReview.setVisibility(View.GONE);
+                reviewsRecyclerView.setVisibility(View.GONE);
+            }
 
             userNameTextView.setText(userName);
             ageTextView.setText("Age: " + age);
@@ -95,7 +115,7 @@ public class searchProfile extends Fragment {
             }
 
             // Load profile image (using Base64 decoding or as URL)
-            if (profileImage != null && !profileImage.isEmpty()) {
+            if (!TextUtils.isEmpty(profileImage)) {
                 try {
                     byte[] decodedBytes = Base64.decode(profileImage, Base64.DEFAULT);
                     Bitmap bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
@@ -120,22 +140,20 @@ public class searchProfile extends Fragment {
         }
 
         // Prevent self-review or self-chat by comparing current user UID to professional UID.
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null && professionalUid != null) {
-            if (currentUser.getUid().equals(professionalUid)) {
-                btnPostReview.setVisibility(View.GONE);
-                btnChats.setVisibility(View.GONE);
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String userId = auth.getCurrentUser().getEmail().replace("@", "_").replace(".", "_");
+
+        if (userId != null && professionalUid != null) {
+            if (userId.equals(professionalUid)) {
+                btnPostReview.setVisibility(View.INVISIBLE);
+                btnChats.setVisibility(View.INVISIBLE);
             } else {
-                btnPostReview.setVisibility(View.VISIBLE);
-                btnChats.setVisibility(View.VISIBLE);
                 btnPostReview.setOnClickListener(v -> showPostReviewDialog());
                 btnChats.setOnClickListener(v -> launchChatFragment());
             }
         }
 
-        // Load reviews
         view.postDelayed(() -> fetchAndDisplayReviews(), 0);
-        fetchAndDisplayReviews();
 
         return view;
     }
@@ -185,7 +203,6 @@ public class searchProfile extends Fragment {
         }
     }
 
-
     private void postReview(String reviewText, float newRating) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String userEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail();
@@ -215,7 +232,6 @@ public class searchProfile extends Fragment {
             }
 
             ratingsum = (ratingsum - oldRating) + newRating;
-            // Create a new review with a timestamp (using System.currentTimeMillis())
             ReviewModel review = new ReviewModel(userEmail, reviewText, newRating, System.currentTimeMillis());
             transaction.set(userReviewRef, review);
             transaction.update(reviewDocRef, "ratingsum", ratingsum, "ratingcount", ratingcount);

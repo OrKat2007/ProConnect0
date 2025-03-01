@@ -2,10 +2,14 @@ package com.example.proconnect.adapters;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,7 +17,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.proconnect.R;
 import com.example.proconnect.models.ChatModel;
-
+import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
@@ -22,13 +26,12 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     private List<ChatModel> chats;
     private OnChatClickListener listener;
 
-    public ChatsAdapter(List<ChatModel> chats) {
-        this.chats = chats;
-    }
-
-    // Interface for handling item clicks.
     public interface OnChatClickListener {
         void onChatClick(ChatModel chat);
+    }
+
+    public ChatsAdapter(List<ChatModel> chats) {
+        this.chats = chats;
     }
 
     public void setOnChatClickListener(OnChatClickListener listener) {
@@ -38,7 +41,6 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     @NonNull
     @Override
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Inflate item_chat.xml (which must include an ImageView with id "ivProfile")
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat, parent, false);
         return new ChatViewHolder(view);
     }
@@ -46,14 +48,17 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
         ChatModel chat = chats.get(position);
-        // Display the partner's real name
+
+        // Set default chat partner name from ChatModel
         holder.tvChatInfo.setText(chat.getOtherUserName());
 
-        // Load the partner's image using Glide.
+        // Optionally, update the UI with more partner details by querying Firestore
+        // (This code can be added if you want to refresh user data)
+
+        // Load profile image using Glide
         String imageString = chat.getOtherUserImage();
-        if (imageString != null && imageString.length() > 200) {
+        if (imageString != null && !imageString.isEmpty()) {
             try {
-                // If the string includes a data URI scheme, split out the Base64 part.
                 if (imageString.contains(",")) {
                     imageString = imageString.split(",")[1];
                 }
@@ -66,36 +71,40 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
                         .error(R.drawable.default_profile)
                         .into(holder.ivProfile);
             } catch (Exception e) {
-                e.printStackTrace();
                 Glide.with(holder.itemView.getContext())
-                        .load(R.drawable.default_profile)
+                        .load(imageString)
+                        .placeholder(R.drawable.default_profile)
                         .transform(new CircleCrop())
+                        .error(R.drawable.default_profile)
                         .into(holder.ivProfile);
             }
         } else {
             Glide.with(holder.itemView.getContext())
-                    .load(imageString)
-                    .placeholder(R.drawable.default_profile)
+                    .load(R.drawable.default_profile)
                     .transform(new CircleCrop())
-                    .error(R.drawable.default_profile)
                     .into(holder.ivProfile);
         }
 
-        // Format and display timestamp.
+        // Format and display timestamp from createdAt field
         if (chat.getCreatedAt() != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-            holder.tvTimestamp.setText(sdf.format(chat.getCreatedAt().toDate()));
+            holder.tvTimestamp.setText(sdf.format(chat.getLastMessageTimestamp().toDate()));
         } else {
             holder.tvTimestamp.setText("N/A");
         }
-        // Display last message if available.
+
+        // Display last message if available
         if (chat.getLastMessage() != null) {
-            holder.tvLastMessage.setText(chat.getLastMessage());
+            String lastMessage = chat.getLastMessage();
+            if (lastMessage.length() > 75) {
+                lastMessage = lastMessage.substring(0, 75) + "...";
+            }
+            holder.tvLastMessage.setText(lastMessage);
         } else {
             holder.tvLastMessage.setText("No messages");
         }
 
-        // Set click listener.
+        // Set click listener
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onChatClick(chat);
@@ -113,12 +122,14 @@ public class ChatsAdapter extends RecyclerView.Adapter<ChatsAdapter.ChatViewHold
         notifyDataSetChanged();
     }
 
-    static class ChatViewHolder extends RecyclerView.ViewHolder {
+    public static class ChatViewHolder extends RecyclerView.ViewHolder {
+        LinearLayout messageContainer;
         ImageView ivProfile;
         TextView tvChatInfo, tvTimestamp, tvLastMessage;
 
-        ChatViewHolder(@NonNull View itemView) {
+        public ChatViewHolder(@NonNull View itemView) {
             super(itemView);
+            messageContainer = itemView.findViewById(R.id.messageContainer);
             ivProfile = itemView.findViewById(R.id.ivProfile);
             tvChatInfo = itemView.findViewById(R.id.tvChatInfo);
             tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
