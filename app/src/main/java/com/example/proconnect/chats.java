@@ -21,8 +21,13 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class chats extends Fragment {
 
@@ -31,6 +36,7 @@ public class chats extends Fragment {
     private ChatsAdapter chatsAdapter;
     private List<ChatModel> chatsList;
     private String currentUserEmail;
+    private String dob;
     private int age;
     private String languages;
     private String availability;
@@ -143,6 +149,7 @@ public class chats extends Fragment {
         bundle.putString("chatPartnerUid", chat.getOtherUserUid());
         bundle.putString("profession", chat.getProfessional());
         bundle.putString("location", chat.getLocation());
+        bundle.putString("dob", dob);
         bundle.putInt("age", age);
         bundle.putString("languages", languages);
         bundle.putString("availability", availability);
@@ -162,6 +169,24 @@ public class chats extends Fragment {
         void onError(Exception e);
     }
 
+    private int calculateAge(String dobString) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        try {
+            Date dob = sdf.parse(dobString);
+            Calendar dobCal = Calendar.getInstance();
+            dobCal.setTime(dob);
+            Calendar today = Calendar.getInstance();
+            int age = today.get(Calendar.YEAR) - dobCal.get(Calendar.YEAR);
+            if (today.get(Calendar.DAY_OF_YEAR) < dobCal.get(Calendar.DAY_OF_YEAR)) {
+                age--;
+            }
+            return age;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     private void loadUserData(String email, OnUserDataLoadedListener listener) {
         db.collection("users").document(email).get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -170,7 +195,7 @@ public class chats extends Fragment {
                         String uid = documentSnapshot.getString("uid");
                         String profession = documentSnapshot.getString("profession");
                         String location = documentSnapshot.getString("location");
-                        age = documentSnapshot.getLong("age").intValue();
+                        dob = documentSnapshot.getString("dob");
                         languages = documentSnapshot.getString("languages");
                         availability = documentSnapshot.getString("availability");
 

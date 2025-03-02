@@ -46,7 +46,7 @@ public class searchProfile extends Fragment {
     private String profession = "";
     private String location = "";
     private String userName = "";
-    private Integer age = 0;
+    private Integer age;
     private String languages = "";
     private String availability = "";
     private String dob;
@@ -108,7 +108,7 @@ public class searchProfile extends Fragment {
                 reviewsRecyclerView.setVisibility(View.GONE);
             }
 
-            int age = calculateAge(dob);
+            age = calculateAge(dob);
             userNameTextView.setText(userName);
             ageTextView.setText("Age: " + age);
             languagesTextView.setText("Languages: " + languages);
@@ -218,7 +218,7 @@ public class searchProfile extends Fragment {
         chatBundle.putString("profession", profession);
         chatBundle.putString("location", location);
         chatBundle.putInt("age", age);
-        chatBundle.putInt("dob", age);
+        chatBundle.putString("dob", dob);
         chatBundle.putString("languages", languages);
         chatBundle.putString("availability", availability);
         chatFragment.setArguments(chatBundle);
