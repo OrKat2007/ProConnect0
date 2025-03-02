@@ -16,7 +16,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,11 +44,19 @@ import java.util.Map;
 public class user_settings extends Fragment {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
     private static final int GALLERY = 1, CAMERA = 2;
-    ImageButton profileImage;
+
+    private ImageButton profileImage;
     private TextView username;
     private Button logout;
     private FirebaseFirestore firestore;
-    private TextView userName, textViewAge, textViewLocation, textViewLanguages, textViewAvailability, textViewRating, textViewProfession;
+
+    // Non-editable fields remain as TextViews
+    private TextView userName, textViewAge, textViewRating, textViewProfession;
+    // Editable fields to update settings
+    private EditText etLanguages, etLocation, etAvailability;
+
+    // Save button for updating the editable fields
+    private Button btnSave;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -55,17 +65,22 @@ public class user_settings extends Fragment {
 
         firestore = FirebaseFirestore.getInstance();
         FirebaseAuth auth = FirebaseAuth.getInstance();
-        String userId = auth.getCurrentUser().getEmail().replace("@", "_").replace(".", "_");
+        String userId = auth.getCurrentUser().getEmail().toLowerCase().replace("@", "_").replace(".", "_");
 
         profileImage = view.findViewById(R.id.profileImage);
+        btnSave = view.findViewById(R.id.btnSave);
         Button logout = view.findViewById(R.id.btnLogOut);
+
+        // Non-editable fields
         userName = view.findViewById(R.id.userName);
         textViewAge = view.findViewById(R.id.textViewAge);
-        textViewLocation = view.findViewById(R.id.textViewLocation);
-        textViewLanguages = view.findViewById(R.id.textViewLanguages);
-        textViewAvailability = view.findViewById(R.id.textViewAvailability);
         textViewRating = view.findViewById(R.id.textViewRating);
         textViewProfession = view.findViewById(R.id.textViewProfession);
+
+        // Editable fields for updating settings
+        etLanguages = (EditText) view.findViewById(R.id.textViewLanguages);
+        etLocation = (EditText) view.findViewById(R.id.textViewLocation);
+        etAvailability = (EditText) view.findViewById(R.id.textViewAvailability);
 
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null && currentUser.getDisplayName() != null) {
@@ -86,6 +101,8 @@ public class user_settings extends Fragment {
             getActivity().finish();
         });
 
+        btnSave.setOnClickListener(v -> saveUpdatedUserFields());
+
         firestore.collection("users").document(userId).get().addOnSuccessListener(document -> {
             if (document.exists()) {
                 textViewProfession.setText("Profession: " + document.getString("profession"));
@@ -96,16 +113,17 @@ public class user_settings extends Fragment {
                 } else {
                     textViewAge.setText("Age: N/A");
                 }
-                textViewLocation.setText("Location: " + document.getString("location"));
-                textViewLanguages.setText("Languages: " + document.getString("languages"));
+                etLocation.setText(document.getString("location"));
+                etLanguages.setText(document.getString("languages"));
 
                 boolean isPro = document.getBoolean("professional") != null && document.getBoolean("professional");
                 if (isPro) {
                     textViewProfession.setVisibility(View.VISIBLE);
-                    textViewAvailability.setVisibility(View.VISIBLE);
+                    etAvailability.setVisibility(View.VISIBLE);
                     textViewRating.setVisibility(View.VISIBLE);
-                    textViewLocation.setVisibility(View.VISIBLE);
-                    textViewAvailability.setText("Availability: " + document.getString("availability"));
+                    etLocation.setVisibility(View.VISIBLE);
+                    etLanguages.setVisibility(View.VISIBLE);
+                    etAvailability.setText(document.getString("availability"));
 
                     firestore.collection("reviews").document(userId).get().addOnSuccessListener(reviewDoc -> {
                         if (reviewDoc.exists()) {
@@ -245,7 +263,7 @@ public class user_settings extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
         String email = user.getEmail();
-        String safeEmail = email.replace("@", "_").replace(".", "_");
+        String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("profileImage", encodedImage);
         firestore.collection("users").document(safeEmail)
@@ -271,5 +289,60 @@ public class user_settings extends Fragment {
             width = Math.round(height * aspectRatio);
         }
         return Bitmap.createScaledBitmap(originalImage, width, height, false);
+    }
+
+    // Normalize languages: remove commas and extra spaces.
+    private String normalizeLanguages(String input) {
+        String noCommas = input.replace(",", " ");
+        String singleSpaced = noCommas.replaceAll("\\s+", " ");
+        return singleSpaced.trim();
+    }
+
+    // Normalize availability: convert "9 - 19" to "09:00-19:00"
+    private String normalizeAvailability(String input) {
+        if (input == null || !input.contains("-")) return input.trim();
+        String[] parts = input.split("-");
+        if (parts.length != 2) return input.trim();
+        String start = parts[0].trim();
+        String end = parts[1].trim();
+        if (!start.contains(":")) {
+            try {
+                int hour = Integer.parseInt(start);
+                start = String.format("%02d:00", hour);
+            } catch (NumberFormatException e) { }
+        }
+        if (!end.contains(":")) {
+            try {
+                int hour = Integer.parseInt(end);
+                end = String.format("%02d:00", hour);
+            } catch (NumberFormatException e) { }
+        }
+        return start + "-" + end;
+    }
+
+    // Save updated editable fields (languages, location, availability) to Firestore.
+    private void saveUpdatedUserFields() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+        String email = user.getEmail();
+        String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
+
+        String newLanguages = etLanguages.getText().toString().trim();
+        String newLocation = etLocation.getText().toString().trim();
+        String newAvailability = etAvailability.getText().toString().trim();
+
+        // Normalize inputs
+        newLanguages = normalizeLanguages(newLanguages);
+        newAvailability = normalizeAvailability(newAvailability);
+
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("languages", newLanguages);
+        updateData.put("location", newLocation);
+        updateData.put("availability", newAvailability);
+
+        firestore.collection("users").document(safeEmail)
+                .update(updateData)
+                .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Settings updated!", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update settings: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 }
