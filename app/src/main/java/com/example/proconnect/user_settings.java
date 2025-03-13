@@ -13,12 +13,14 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,10 +55,15 @@ public class user_settings extends Fragment {
     // Non-editable fields remain as TextViews
     private TextView userName, textViewAge, textViewRating, textViewProfession;
     // Editable fields to update settings
-    private EditText etLanguages, etLocation, etAvailability;
+    // Removed etLanguages EditText and replaced with spinnerLanguage for multi-select languages.
+    private Spinner spinnerLanguage;
+    private EditText etLocation, etAvailability;
 
     // Save button for updating the editable fields
     private Button btnSave;
+
+    // Define your popular languages for selection
+    private final String[] languagesArray = {"Hebrew", "English", "Russian", "Spanish", "French", "German", "Chinese", "Italian", "Portuguese", "Japanese"};
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -78,9 +85,10 @@ public class user_settings extends Fragment {
         textViewProfession = view.findViewById(R.id.textViewProfession);
 
         // Editable fields for updating settings
-        etLanguages = (EditText) view.findViewById(R.id.textViewLanguages);
-        etLocation = (EditText) view.findViewById(R.id.textViewLocation);
-        etAvailability = (EditText) view.findViewById(R.id.textViewAvailability);
+        // Replace the previous EditText for languages with a Spinner
+        spinnerLanguage = view.findViewById(R.id.textViewLanguages);
+        etLocation = view.findViewById(R.id.textViewLocation);
+        etAvailability = view.findViewById(R.id.textViewAvailability);
 
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null && currentUser.getDisplayName() != null) {
@@ -103,6 +111,9 @@ public class user_settings extends Fragment {
 
         btnSave.setOnClickListener(v -> saveUpdatedUserFields());
 
+        // Set up the multi-select spinner for languages:
+        setupLanguageSpinner();
+
         firestore.collection("users").document(userId).get().addOnSuccessListener(document -> {
             if (document.exists()) {
                 textViewProfession.setText("Profession: " + document.getString("profession"));
@@ -114,7 +125,14 @@ public class user_settings extends Fragment {
                     textViewAge.setText("Age: N/A");
                 }
                 etLocation.setText(document.getString("location"));
-                etLanguages.setText(document.getString("languages"));
+                // Update the language spinner adapter with the saved languages
+                String languages = document.getString("languages");
+                if (!TextUtils.isEmpty(languages)) {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                            android.R.layout.simple_spinner_item, new String[]{languages});
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinnerLanguage.setAdapter(adapter);
+                }
 
                 boolean isPro = document.getBoolean("professional") != null && document.getBoolean("professional");
                 if (isPro) {
@@ -122,7 +140,7 @@ public class user_settings extends Fragment {
                     etAvailability.setVisibility(View.VISIBLE);
                     textViewRating.setVisibility(View.VISIBLE);
                     etLocation.setVisibility(View.VISIBLE);
-                    etLanguages.setVisibility(View.VISIBLE);
+                    spinnerLanguage.setVisibility(View.VISIBLE);
                     etAvailability.setText(document.getString("availability"));
 
                     firestore.collection("reviews").document(userId).get().addOnSuccessListener(reviewDoc -> {
@@ -138,6 +156,57 @@ public class user_settings extends Fragment {
         });
 
         return view;
+    }
+
+    private void setupLanguageSpinner() {
+        // Set a default adapter with a prompt for the spinner
+        ArrayAdapter<String> defaultAdapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item, new String[]{"Select Languages"});
+        defaultAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerLanguage.setAdapter(defaultAdapter);
+
+        // Override the spinner touch event to show a multi-choice dialog
+        spinnerLanguage.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                showLanguageMultiSelectDialog();
+            }
+            return true; // Consume the event to prevent the default dropdown
+        });
+    }
+
+    private void showLanguageMultiSelectDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Languages");
+
+        // Boolean array to track selections
+        boolean[] checkedItems = new boolean[languagesArray.length];
+
+        builder.setMultiChoiceItems(languagesArray, checkedItems, (dialog, which, isChecked) -> {
+            checkedItems[which] = isChecked;
+        });
+
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            // Build a comma-separated list of selected languages
+            StringBuilder selectedLanguages = new StringBuilder();
+            for (int i = 0; i < languagesArray.length; i++) {
+                if (checkedItems[i]) {
+                    if (selectedLanguages.length() > 0) {
+                        selectedLanguages.append(", ");
+                    }
+                    selectedLanguages.append(languagesArray[i]);
+                }
+            }
+            String displayText = selectedLanguages.length() > 0 ? selectedLanguages.toString() : "Select Languages";
+
+            // Update the spinner's adapter with the selected languages
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                    android.R.layout.simple_spinner_item, new String[]{displayText});
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerLanguage.setAdapter(adapter);
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.create().show();
     }
 
     private int calculateAge(String dobString) {
@@ -327,7 +396,8 @@ public class user_settings extends Fragment {
         String email = user.getEmail();
         String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
 
-        String newLanguages = etLanguages.getText().toString().trim();
+        // Retrieve languages from the spinner. This returns the comma‑separated string we set.
+        String newLanguages = spinnerLanguage.getSelectedItem().toString().trim();
         String newLocation = etLocation.getText().toString().trim();
         String newAvailability = etAvailability.getText().toString().trim();
 

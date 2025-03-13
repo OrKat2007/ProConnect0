@@ -53,6 +53,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         UserModel user = userList.get(position);
         holder.tvName.setText(user.getName());
         holder.tvProfession.setText(user.getProfession());
+        holder.tvAvailability.setText("Availability: " + user.getAvailability());
 
         // Set the profile image using Glide with CircleCrop
         if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
@@ -142,7 +143,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvProfession;
+        TextView tvName, tvProfession, tvAvailability;
         ImageView ivProfile;
         RatingBar ratingBar;
 
@@ -151,7 +152,9 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             tvName = itemView.findViewById(R.id.tvName);
             tvProfession = itemView.findViewById(R.id.tvProfession);
             ivProfile = itemView.findViewById(R.id.ivProfile);
-            ratingBar = itemView.findViewById(R.id.ratingBar);
+            ratingBar = itemView.findViewById(R.id.ratingBar2);
+            tvAvailability = itemView.findViewById(R.id.tvAvailability);
+
         }
     }
 

@@ -98,7 +98,7 @@
         android:textColorHint="@color/black"
         android:textSize="15dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
+        app:layout_constraintTop_toBottomOf="@+id/spinnerLanguage" />
 
     <TextView
         android:id="@+id/birthdatetv"
@@ -114,10 +114,10 @@
         android:textColor="@color/black"
         android:text="Birthdate: "
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etLanguage" />
+        app:layout_constraintTop_toBottomOf="@+id/spinnerLanguage" />
 
-    <EditText
-        android:id="@+id/etLanguage"
+    <Spinner
+        android:id="@+id/spinnerLanguage"
         android:layout_width="306dp"
         android:layout_height="55dp"
         android:layout_marginStart="52dp"
@@ -125,10 +125,7 @@
         android:layout_marginEnd="52dp"
         android:background="@drawable/gray_rectengle"
         android:fontFamily="sans-serif-black"
-        android:hint="languages (e.g. English, Hebrew):"
         android:paddingLeft="30dp"
-        android:paddingRight="30dp"
-        android:textColorHint="@color/black"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etEmail" />
@@ -196,6 +193,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
+
 
 
 
