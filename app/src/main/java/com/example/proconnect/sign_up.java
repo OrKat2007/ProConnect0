@@ -273,11 +273,35 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                 .set(userData)
                 .addOnSuccessListener(result -> {
                     Toast.makeText(sign_up.this, "User saved to Firestore", Toast.LENGTH_SHORT).show();
-                    // Additional professional setup code, if needed...
+
+                    if (isPro) {
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+                        DocumentReference userReviewDoc = db.collection("reviews").document(formattedEmail);
+
+                        Map<String, Object> professionalData = new HashMap<>();
+                        professionalData.put("rating", 0f);
+                        professionalData.put("ratingsum", 0);
+                        professionalData.put("ratingcount", 0);
+
+                        userReviewDoc.set(professionalData)
+                                .addOnSuccessListener(innerResult -> {
+
+                                    // Optionally create a "reviewspost" subcollection.
+                                    CollectionReference reviewspostRef = userReviewDoc.collection("reviewspost");
+                                    Map<String, Object> initialReview = new HashMap<>();
+                                    initialReview.put("username", "admin");
+                                    initialReview.put("reviewText", "Initial review");
+                                    initialReview.put("rating", 5);
+
+                                    reviewspostRef.document("initial_review")
+                                            .set(initialReview);
+                                });
+                    }
                     startActivity(new Intent(sign_up.this, MainActivity.class));
                     finish();
                 })
                 .addOnFailureListener(e -> Toast.makeText(sign_up.this, "Firestore Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
+
     }
 
     private String normalizeAvailability(String input) {

@@ -48,7 +48,7 @@ public class user_settings extends Fragment {
     private static final int GALLERY = 1, CAMERA = 2;
 
     private ImageButton profileImage;
-    private TextView username;
+    private TextView username , tvLocation, tvAvailability;
     private Button logout;
     private FirebaseFirestore firestore;
 
@@ -83,12 +83,15 @@ public class user_settings extends Fragment {
         textViewAge = view.findViewById(R.id.textViewAge);
         textViewRating = view.findViewById(R.id.textViewRating);
         textViewProfession = view.findViewById(R.id.textViewProfession);
+        tvLocation = view.findViewById(R.id.tvLocation);
+        tvAvailability = view.findViewById(R.id.tvAvailability);
+
 
         // Editable fields for updating settings
         // Replace the previous EditText for languages with a Spinner
         spinnerLanguage = view.findViewById(R.id.textViewLanguages);
-        etLocation = view.findViewById(R.id.textViewLocation);
-        etAvailability = view.findViewById(R.id.textViewAvailability);
+        etLocation = view.findViewById(R.id.etLocation);
+        etAvailability = view.findViewById(R.id.editTextAvailability);
 
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null && currentUser.getDisplayName() != null) {
@@ -141,6 +144,8 @@ public class user_settings extends Fragment {
                     textViewRating.setVisibility(View.VISIBLE);
                     etLocation.setVisibility(View.VISIBLE);
                     spinnerLanguage.setVisibility(View.VISIBLE);
+                    tvLocation.setVisibility(View.VISIBLE);
+                    tvAvailability.setVisibility(View.VISIBLE);
                     etAvailability.setText(document.getString("availability"));
 
                     firestore.collection("reviews").document(userId).get().addOnSuccessListener(reviewDoc -> {
@@ -148,7 +153,11 @@ public class user_settings extends Fragment {
                             double ratingsum = reviewDoc.getDouble("ratingsum");
                             int ratingcount = reviewDoc.getLong("ratingcount").intValue();
                             double rating = ratingsum / ratingcount;
-                            textViewRating.setText("Rating: " + rating);
+                            if(rating == 0){
+                                textViewRating.setText("No Rating");
+                            }else{
+                                textViewRating.setText("Rating: " + rating);
+                            }
                         }
                     });
                 }
@@ -178,8 +187,22 @@ public class user_settings extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Select Languages");
 
-        // Boolean array to track selections
+        // Get the current selection from the spinner
+        String currentSelection = spinnerLanguage.getSelectedItem().toString();
         boolean[] checkedItems = new boolean[languagesArray.length];
+
+        // If the spinner isn't showing the default prompt, parse the current selection
+        if (!currentSelection.equals("Select Languages")) {
+            String[] selectedLanguagesArray = currentSelection.split(",\\s*");
+            for (int i = 0; i < languagesArray.length; i++) {
+                for (String lang : selectedLanguagesArray) {
+                    if (languagesArray[i].equalsIgnoreCase(lang)) {
+                        checkedItems[i] = true;
+                        break;
+                    }
+                }
+            }
+        }
 
         builder.setMultiChoiceItems(languagesArray, checkedItems, (dialog, which, isChecked) -> {
             checkedItems[which] = isChecked;
@@ -208,6 +231,7 @@ public class user_settings extends Fragment {
         builder.setNegativeButton("Cancel", null);
         builder.create().show();
     }
+
 
     private int calculateAge(String dobString) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
