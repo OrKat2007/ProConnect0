@@ -1,12 +1,18 @@
 package com.example.proconnect;
 
+import static androidx.core.content.ContextCompat.registerReceiver;
+import static java.security.AccessController.getContext;
+
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -44,23 +50,26 @@ import java.util.Locale;
 import java.util.Map;
 
 public class user_settings extends Fragment {
+
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
     private static final int GALLERY = 1, CAMERA = 2;
 
     private ImageButton profileImage;
-    private TextView username , tvLocation, tvAvailability;
+    private TextView username, tvLocation, tvAvailability;
     private Button logout;
     private FirebaseFirestore firestore;
 
     // Non-editable fields remain as TextViews
     private TextView userName, textViewAge, textViewRating, textViewProfession;
-    // Editable fields to update settings
-    // Removed etLanguages EditText and replaced with spinnerLanguage for multi-select languages.
+    // Editable fields to update settings (languages now uses a Spinner)
     private Spinner spinnerLanguage;
     private EditText etLocation, etAvailability;
 
-    // Save button for updating the editable fields
-    private Button btnSave;
+    // Save and Delete buttons
+    private Button btnSave, btnDelete;
+
+    private MyReceiver batteryReceiver;   // keep a reference
+    private TextView tvBatteryInfo;                 // for the battery text
 
     // Define your popular languages for selection
     private final String[] languagesArray = {"Hebrew", "English", "Russian", "Spanish", "French", "German", "Chinese", "Italian", "Portuguese", "Japanese"};
@@ -76,6 +85,7 @@ public class user_settings extends Fragment {
 
         profileImage = view.findViewById(R.id.profileImage);
         btnSave = view.findViewById(R.id.btnSave);
+        btnDelete = view.findViewById(R.id.btnDelete);
         Button logout = view.findViewById(R.id.btnLogOut);
 
         // Non-editable fields
@@ -86,9 +96,7 @@ public class user_settings extends Fragment {
         tvLocation = view.findViewById(R.id.tvLocation);
         tvAvailability = view.findViewById(R.id.tvAvailability);
 
-
         // Editable fields for updating settings
-        // Replace the previous EditText for languages with a Spinner
         spinnerLanguage = view.findViewById(R.id.textViewLanguages);
         etLocation = view.findViewById(R.id.etLocation);
         etAvailability = view.findViewById(R.id.editTextAvailability);
@@ -116,6 +124,9 @@ public class user_settings extends Fragment {
 
         // Set up the multi-select spinner for languages:
         setupLanguageSpinner();
+
+        // Set up the delete button with a custom dialog.
+        btnDelete.setOnClickListener(v -> showDeleteUserDialog(userId));
 
         firestore.collection("users").document(userId).get().addOnSuccessListener(document -> {
             if (document.exists()) {
@@ -153,9 +164,9 @@ public class user_settings extends Fragment {
                             double ratingsum = reviewDoc.getDouble("ratingsum");
                             int ratingcount = reviewDoc.getLong("ratingcount").intValue();
                             double rating = ratingsum / ratingcount;
-                            if(rating == 0){
+                            if (rating == 0) {
                                 textViewRating.setText("No Rating");
-                            }else{
+                            } else {
                                 textViewRating.setText("Rating: " + rating);
                             }
                         }
@@ -164,22 +175,31 @@ public class user_settings extends Fragment {
             }
         });
 
+
         return view;
     }
 
+    private int getBatteryPercentage(Context context) {
+        Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
+        int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
+        if (level == -1 || scale == -1) {
+            return 50; // fallback
+        }
+        return (int) ((level / (float) scale) * 100);
+    }
+
     private void setupLanguageSpinner() {
-        // Set a default adapter with a prompt for the spinner
         ArrayAdapter<String> defaultAdapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_spinner_item, new String[]{"Select Languages"});
         defaultAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerLanguage.setAdapter(defaultAdapter);
 
-        // Override the spinner touch event to show a multi-choice dialog
         spinnerLanguage.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_UP) {
                 showLanguageMultiSelectDialog();
             }
-            return true; // Consume the event to prevent the default dropdown
+            return true;
         });
     }
 
@@ -187,11 +207,9 @@ public class user_settings extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Select Languages");
 
-        // Get the current selection from the spinner
         String currentSelection = spinnerLanguage.getSelectedItem().toString();
         boolean[] checkedItems = new boolean[languagesArray.length];
 
-        // If the spinner isn't showing the default prompt, parse the current selection
         if (!currentSelection.equals("Select Languages")) {
             String[] selectedLanguagesArray = currentSelection.split(",\\s*");
             for (int i = 0; i < languagesArray.length; i++) {
@@ -209,7 +227,6 @@ public class user_settings extends Fragment {
         });
 
         builder.setPositiveButton("OK", (dialog, which) -> {
-            // Build a comma-separated list of selected languages
             StringBuilder selectedLanguages = new StringBuilder();
             for (int i = 0; i < languagesArray.length; i++) {
                 if (checkedItems[i]) {
@@ -221,7 +238,6 @@ public class user_settings extends Fragment {
             }
             String displayText = selectedLanguages.length() > 0 ? selectedLanguages.toString() : "Select Languages";
 
-            // Update the spinner's adapter with the selected languages
             ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
                     android.R.layout.simple_spinner_item, new String[]{displayText});
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -231,7 +247,6 @@ public class user_settings extends Fragment {
         builder.setNegativeButton("Cancel", null);
         builder.create().show();
     }
-
 
     private int calculateAge(String dobString) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -307,6 +322,11 @@ public class user_settings extends Fragment {
     }
 
     private void takePhotoFromCamera() {
+        int batteryLevel = getBatteryPercentage(requireContext());
+        if (batteryLevel < 10) {
+            Toast.makeText(getContext(), "Battery too low to open camera", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, CAMERA);
     }
@@ -420,12 +440,10 @@ public class user_settings extends Fragment {
         String email = user.getEmail();
         String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
 
-        // Retrieve languages from the spinner. This returns the comma‑separated string we set.
         String newLanguages = spinnerLanguage.getSelectedItem().toString().trim();
         String newLocation = etLocation.getText().toString().trim();
         String newAvailability = etAvailability.getText().toString().trim();
 
-        // Normalize inputs
         newLanguages = normalizeLanguages(newLanguages);
         newAvailability = normalizeAvailability(newAvailability);
 
@@ -438,5 +456,49 @@ public class user_settings extends Fragment {
                 .update(updateData)
                 .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Settings updated!", Toast.LENGTH_SHORT).show())
                 .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update settings: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+    // Show a custom dialog to confirm user deletion.
+    private void showDeleteUserDialog(String userId) {
+        // Inflate the custom dialog layout.
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View dialogView = inflater.inflate(R.layout.custom_dialog_delete, null);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setView(dialogView);
+
+        // Obtain references to the views in the custom layout.
+        TextView tvDialogTitle = dialogView.findViewById(R.id.tvDialogTitle);
+        TextView tvDialogMessage = dialogView.findViewById(R.id.tvDialogMessage);
+        Button btnDialogCancel = dialogView.findViewById(R.id.btnDialogCancel);
+        Button btnDialogDelete = dialogView.findViewById(R.id.btnDialogDelete);
+
+        // Create the dialog.
+        AlertDialog dialog = builder.create();
+
+        // Set click listeners for the buttons.
+        btnDialogCancel.setOnClickListener(v -> dialog.dismiss());
+        btnDialogDelete.setOnClickListener(v -> {
+            // Call deleteUser after confirmation.
+            deleteUser(userId);
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    // Delete the user's document from Firestore and sign them out.
+    private void deleteUser(String userId) {
+        firestore.collection("users").document(userId)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getContext(), "User deleted successfully", Toast.LENGTH_SHORT).show();
+                    FirebaseAuth.getInstance().signOut();
+                    Intent intent = new Intent(getActivity(), login_screen.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    getActivity().finish();
+                })
+                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to delete user: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 }

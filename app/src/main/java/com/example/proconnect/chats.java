@@ -96,7 +96,6 @@ public class chats extends Fragment {
                 ChatModel chat = doc.toObject(ChatModel.class);
                 if (chat != null) {
                     chat.setChatId(doc.getId());
-                    doc.getString("LastMessage");
                     chat.setLastMessage(doc.getString("LastMessage"));
                     Timestamp timestamp = doc.getTimestamp("LastMessageTimestamp");
                     long lastMessageTimestamp = (timestamp != null) ? timestamp.toDate().getTime() : 0;
@@ -104,26 +103,14 @@ public class chats extends Fragment {
 
                     String partnerEmail = chat.getUser1().equals(currentUserEmail)
                             ? chat.getUser2() : chat.getUser1();
-                    loadUserData(partnerEmail, new OnUserDataLoadedListener() {
-                        @Override
-                        public void onUserDataLoaded(String profileImage, String uid, String profession, String location, String realName) {
-                            chat.setOtherUserName(realName != null ? realName : partnerEmail);
-                            chat.setOtherUserImage(profileImage != null ? profileImage : "");
-                            chat.setOtherUserUid(uid != null ? uid : "");
-                            chat.setProfessional(profession != null ? profession : "");
-                            chat.setLocation(location != null ? location : "");
-                            chatsAdapter.notifyDataSetChanged();
-                        }
 
-                        @Override
-                        public void onError(Exception e) {
-                            chat.setOtherUserName(partnerEmail);
-                            chat.setOtherUserImage("");
-                            chat.setOtherUserUid("");
-                            chat.setProfessional("");
-                            chat.setLocation("");
-                            chatsAdapter.notifyDataSetChanged();
-                        }
+                    loadUserData(partnerEmail, (profileImage, uid, profession, location, realName) -> {
+                        chat.setOtherUserName((realName != null && !realName.isEmpty()) ? realName : partnerEmail);
+                        chat.setOtherUserImage((profileImage != null) ? profileImage : "");
+                        chat.setOtherUserUid((uid != null) ? uid : "");
+                        chat.setProfessional((profession != null) ? profession : "");
+                        chat.setLocation((location != null) ? location : "");
+                        chatsAdapter.notifyDataSetChanged();
                     });
 
                     chatsList.add(chat);
@@ -138,7 +125,10 @@ public class chats extends Fragment {
     }
 
     private void launchChatFragment(ChatModel chat) {
-        Chat_Fragment chatFragment = new Chat_Fragment();
+        if(chat.getOtherUserName().equals("Deleted User")){
+            Toast.makeText(getContext(), "User is deleted", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Bundle bundle = new Bundle();
         bundle.putString("chatId", chat.getChatId());
         String partnerEmail = chat.getUser1().equals(currentUserEmail)
@@ -149,11 +139,12 @@ public class chats extends Fragment {
         bundle.putString("chatPartnerUid", chat.getOtherUserUid());
         bundle.putString("profession", chat.getProfessional());
         bundle.putString("location", chat.getLocation());
-        bundle.putString("dob", dob);
+        bundle.putString("dob", (dob != null ? dob : ""));
         bundle.putInt("age", age);
-        bundle.putString("languages", languages);
-        bundle.putString("availability", availability);
+        bundle.putString("languages", (languages != null ? languages : ""));
+        bundle.putString("availability", (availability != null ? availability : ""));
 
+        Chat_Fragment chatFragment = new Chat_Fragment();
         chatFragment.setArguments(bundle);
 
         if (getActivity() != null) {
@@ -161,29 +152,6 @@ public class chats extends Fragment {
                     .replace(R.id.frame_layout, chatFragment)
                     .addToBackStack(null)
                     .commit();
-        }
-    }
-
-    private interface OnUserDataLoadedListener {
-        void onUserDataLoaded(String profileImage, String uid, String profession, String location, String userName);
-        void onError(Exception e);
-    }
-
-    private int calculateAge(String dobString) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        try {
-            Date dob = sdf.parse(dobString);
-            Calendar dobCal = Calendar.getInstance();
-            dobCal.setTime(dob);
-            Calendar today = Calendar.getInstance();
-            int age = today.get(Calendar.YEAR) - dobCal.get(Calendar.YEAR);
-            if (today.get(Calendar.DAY_OF_YEAR) < dobCal.get(Calendar.DAY_OF_YEAR)) {
-                age--;
-            }
-            return age;
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return 0;
         }
     }
 
@@ -198,13 +166,16 @@ public class chats extends Fragment {
                         dob = documentSnapshot.getString("dob");
                         languages = documentSnapshot.getString("languages");
                         availability = documentSnapshot.getString("availability");
-
                         String realName = documentSnapshot.getString("name");
                         listener.onUserDataLoaded(profileImage, uid, profession, location, realName);
                     } else {
-                        listener.onError(new Exception("User not found"));
+                        listener.onUserDataLoaded("", "", "", "", "Deleted User");
                     }
                 })
-                .addOnFailureListener(listener::onError);
+                .addOnFailureListener(e -> listener.onUserDataLoaded("", "", "", "", "Deleted User"));
+    }
+
+    private interface OnUserDataLoadedListener {
+        void onUserDataLoaded(String profileImage, String uid, String profession, String location, String userName);
     }
 }

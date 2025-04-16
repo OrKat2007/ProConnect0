@@ -118,14 +118,13 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
             showDatePickerDialog();
         }
     }
-
     private void updateButtonColors() {
         if (isPro) {
-            probtn.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
-            userbtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#606060")));
+            probtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF003FFF")));//blue
+            userbtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#2196F3")));//cyan
         } else {
-            userbtn.setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
-            probtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#606060")));
+            userbtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF003FFF")));//blue
+            probtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#2196F3")));//cyan
         }
     }
 

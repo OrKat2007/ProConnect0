@@ -70,7 +70,7 @@
             android:layout_marginTop="20dp"
             android:text="Languages:"
             android:textColor="@color/black"
-            android:textSize="30dp"
+            android:textSize="20dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/Agetv" />
 
@@ -160,8 +160,8 @@
             android:id="@+id/btnChats"
             android:layout_width="78dp"
             android:layout_height="74dp"
-            android:layout_marginTop="189dp"
-            android:layout_marginEnd="23dp"
+            android:layout_marginTop="352dp"
+            android:layout_marginEnd="20dp"
             android:src="@drawable/chatimgae"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView" />

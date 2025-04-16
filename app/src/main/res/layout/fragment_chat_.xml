@@ -8,6 +8,12 @@
     android:fitsSystemWindows="true">
 
     <!-- RecyclerView for displaying chat messages -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineBottomNav"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.9197593" />
 
     <LinearLayout
         android:id="@+id/profilecontainer"
@@ -23,7 +29,7 @@
 
         <ImageButton
             android:id="@+id/professionalImage"
-            android:layout_width="72dp"
+            android:layout_width="75dp"
             android:layout_height="75dp"
             android:background="@drawable/round_image"
             android:clipToOutline="true"
@@ -35,6 +41,8 @@
             android:id="@+id/proffesionalName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:fontFamily="sans-serif-medium"
             android:textSize="40dp"
             android:text="TextView" />
     </LinearLayout>
@@ -44,44 +52,56 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/messageContainer"
+        android:layout_height="550dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/profilecontainer" />
+
+    <Button
+        android:id="@+id/btnAddDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:backgroundTint="@color/cyan"
+        android:text="Add date to calender"
+        app:layout_constraintBottom_toTopOf="@+id/messageContainer"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
         android:id="@+id/messageContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="163dp"
+        android:background="?android:attr/windowBackground"
         android:orientation="horizontal"
         android:padding="12dp"
-        android:background="?android:attr/windowBackground"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="80dp"> <!-- Increased margin for spacing -->
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/guidelineBottomNav"> <!-- Increased margin for spacing -->
 
         <!-- Chat input field -->
         <EditText
             android:id="@+id/etMessage"
             android:layout_width="0dp"
             android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:hint="Type a message"
             android:background="@android:drawable/edit_text"
+            android:hint="Type a message"
             android:padding="12dp"
-            android:textSize="16sp"
-            android:layout_marginEnd="8dp"/> <!-- Adds spacing before the button -->
+            android:textSize="16sp" /> <!-- Adds spacing before the button -->
 
         <!-- Send button -->
         <Button
             android:id="@+id/btnSend"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
-            android:text="Send"
+            android:backgroundTint="@color/cyan"
             android:paddingHorizontal="16dp"
-            android:textSize="16sp"/>
+            android:text="Send"
+            android:textSize="16sp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

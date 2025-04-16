@@ -16,11 +16,11 @@ import java.util.Locale;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
     private List<MessageModel> messageList;
-    private String currentUserEmail;
+    private String currentUserName; // Now using user name
 
-    public MessageAdapter(List<MessageModel> messageList, String currentUserEmail) {
+    public MessageAdapter(List<MessageModel> messageList, String currentUserName) {
         this.messageList = messageList;
-        this.currentUserEmail = currentUserEmail;
+        this.currentUserName = currentUserName;
     }
 
     @NonNull
@@ -44,8 +44,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             holder.tvTimestamp.setText("N/A");
         }
 
-        // Check if the message was sent by the current user
-        if (message.getSender().equals(currentUserEmail)) {
+        // Check if the message was sent by the current user by comparing sender names
+        if (message.getSender().equals(currentUserName)) {
             // For sent messages, align the message container to the right
             holder.messageContainer.setGravity(Gravity.END);
             holder.tvSender.setText("You");
@@ -55,7 +55,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             holder.tvSender.setText(message.getSender());
         }
     }
-
 
     @Override
     public int getItemCount() {

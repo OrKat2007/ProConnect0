@@ -11,6 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineBottomNav"
+            android:layout_width="wrap_content"
+            android:layout_height="80dp"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.92"/>
+
         <TextView
             android:id="@+id/textview"
             android:layout_width="wrap_content"
@@ -173,7 +180,8 @@
             android:id="@+id/btnLogOut"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="#606060"
+            android:layout_marginEnd="3dp"
+            android:backgroundTint="@color/cyan"
             android:text="Log Out"
             android:textColor="@color/white"
             android:textSize="20dp"
@@ -185,11 +193,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
-            android:backgroundTint="#606060"
-            android:text="Save"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageView" />
+            android:layout_marginBottom="10dp"
+            android:backgroundTint="@color/cyan"
+            android:text="Save Changes"
+            app:layout_constraintBottom_toBottomOf="@id/guidelineBottomNav"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:layout_marginEnd="1dp"
+            android:textSize="15dp"
+            android:backgroundTint="@color/cyan"
+            android:text="Delete user"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnLogOut" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 </FrameLayout>

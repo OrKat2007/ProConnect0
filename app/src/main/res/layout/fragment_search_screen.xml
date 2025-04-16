@@ -17,6 +17,7 @@
             android:layout_height="55dp"
             android:layout_margin="16dp"
             android:background="@drawable/darkgray_rectengle"
+            android:backgroundTint="@color/cyan"
             android:gravity="center"
             android:hint="Type to search..."
             android:paddingLeft="30dp"

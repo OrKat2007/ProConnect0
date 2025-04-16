@@ -1,25 +1,39 @@
 package com.example.proconnect;
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.CalendarContract;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,11 +51,15 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.List;
 
 public class Chat_Fragment extends Fragment {
+    private static final int PERMISSION_REQUEST_CODE = 100;
+
     private FirebaseFirestore db;
     private RecyclerView messagesRecyclerView;
     private EditText etMessage;
@@ -49,8 +67,9 @@ public class Chat_Fragment extends Fragment {
     private TextView tvproffessionalname;
     private String chatId;
     private String currentUserEmail;
+    private String currentUserName; // current user's display name
     private String chatPartnerEmail;
-    private MessageAdapter messageAdapter; // Now using MessageAdapter
+    private MessageAdapter messageAdapter;
     private String profileImage = "";
     private String profession = "";
     private String location = "";
@@ -61,8 +80,7 @@ public class Chat_Fragment extends Fragment {
     private String availability = "";
     private String dob;
 
-    public Chat_Fragment() {
-    }
+    public Chat_Fragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -76,7 +94,7 @@ public class Chat_Fragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         db = FirebaseFirestore.getInstance();
 
-        // Get views from the inflated layout
+        // Retrieve views from layout
         LinearLayout linearLayout1 = view.findViewById(R.id.profilecontainer);
         ImageButton professionalImage = view.findViewById(R.id.professionalImage);
         messagesRecyclerView = view.findViewById(R.id.messagesRecyclerView);
@@ -84,18 +102,37 @@ public class Chat_Fragment extends Fragment {
         etMessage = view.findViewById(R.id.etMessage);
         btnSend = view.findViewById(R.id.btnSend);
         tvproffessionalname = view.findViewById(R.id.proffesionalName);
+        Button btnAddDate = view.findViewById(R.id.btnAddDate);
 
-        // Get current user email from FirebaseAuth
+        // Set up "Add date to calendar" button click with runtime permission check:
+        btnAddDate.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR},
+                        PERMISSION_REQUEST_CODE);
+            } else {
+                showDatePickerForCalendarEvent();
+            }
+        });
+
+
+
+        // Get current user info from FirebaseAuth.
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             currentUserEmail = formatEmail(currentUser.getEmail().toLowerCase());
-            Log.d("ChatFragment", "Current user email: " + currentUserEmail);
+            currentUserName = currentUser.getDisplayName();
+            if (currentUserName == null || currentUserName.isEmpty()) {
+                currentUserName = currentUserEmail; // fallback
+            }
+            Log.d("ChatFragment", "Current user: " + currentUserName);
         } else {
             Toast.makeText(getContext(), "User not authenticated", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Retrieve chat partner data from arguments
+        // Retrieve chat partner data from bundle arguments.
         Bundle args = getArguments();
         if (args != null) {
             profileImage = args.getString("chatPartnerImage", "");
@@ -108,14 +145,13 @@ public class Chat_Fragment extends Fragment {
             dob = args.getString("dob", "");
             languages = args.getString("languages", "");
             availability = args.getString("availability", "");
-
             Log.d("ChatFragment", "Chat partner email: " + chatPartnerEmail);
         } else {
             Toast.makeText(getContext(), "Chat partner info missing", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Delay image loading until after the view has been laid out
+        // Delay image loading until layout is ready.
         view.post(() -> {
             if (professionalImage != null) {
                 try {
@@ -128,7 +164,6 @@ public class Chat_Fragment extends Fragment {
                             .placeholder(R.drawable.default_profile)
                             .into(professionalImage);
                 } catch (Exception e) {
-                    // If Base64 decoding fails, try to load the image as a URL
                     Glide.with(linearLayout1)
                             .load(profileImage)
                             .transform(new CircleCrop())
@@ -145,7 +180,7 @@ public class Chat_Fragment extends Fragment {
             }
         });
 
-        // Set click listener on professionalImage to navigate back to searchProfile
+        // Click listener on professionalImage to navigate to searchProfile.
         if (professionalImage != null) {
             professionalImage.setOnClickListener(v -> {
                 searchProfile searchProfileFragment = new searchProfile();
@@ -159,9 +194,7 @@ public class Chat_Fragment extends Fragment {
                 bundle.putInt("age", age);
                 bundle.putString("languages", languages);
                 bundle.putString("availability", availability);
-
                 searchProfileFragment.setArguments(bundle);
-
                 if (getActivity() != null) {
                     getActivity().getSupportFragmentManager().beginTransaction()
                             .replace(R.id.frame_layout, searchProfileFragment)
@@ -171,7 +204,7 @@ public class Chat_Fragment extends Fragment {
             });
         }
 
-        // Generate chat ID
+        // Generate chat ID.
         if (!TextUtils.isEmpty(currentUserEmail) && !TextUtils.isEmpty(chatPartnerEmail)) {
             chatId = currentUserEmail.compareTo(chatPartnerEmail) < 0
                     ? currentUserEmail + "_" + chatPartnerEmail
@@ -182,10 +215,9 @@ public class Chat_Fragment extends Fragment {
             return;
         }
 
-        // Initialize MessageAdapter and set it to the RecyclerView
-        messageAdapter = new MessageAdapter(new ArrayList<>(), currentUserEmail);
+        // Initialize MessageAdapter and load messages.
+        messageAdapter = new MessageAdapter(new ArrayList<>(), currentUserName);
         messagesRecyclerView.setAdapter(messageAdapter);
-
         createChatIfNotExists();
         loadChatMessages();
 
@@ -198,6 +230,72 @@ public class Chat_Fragment extends Fragment {
         });
     }
 
+    // Request permission result callback.
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length >= 2 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                showDatePickerForCalendarEvent();
+            } else {
+                Toast.makeText(getContext(), "Calendar permissions are required", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+
+
+    // Method to start date picker dialog.
+    private void showDatePickerForCalendarEvent() {
+        Calendar now = Calendar.getInstance();
+        DatePickerDialog datePicker = new DatePickerDialog(
+                getContext(),
+                (dateView, year, month, dayOfMonth) -> {
+                    // Inflate custom dialog with TimePicker and EditText.
+                    LayoutInflater inflater = LayoutInflater.from(getContext());
+                    View dialogView = inflater.inflate(R.layout.dialog_time_with_text, null);
+                    TimePicker timePicker = dialogView.findViewById(R.id.timePicker);
+                    EditText etEventText = dialogView.findViewById(R.id.etEventText);
+                    timePicker.setIs24HourView(true);
+
+                    new AlertDialog.Builder(getContext())
+                            .setTitle("Select time & enter event text")
+                            .setView(dialogView)
+                            .setPositiveButton("OK", (dialogInterface, whichButton) -> {
+                                int hourOfDay, minute;
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                    hourOfDay = timePicker.getHour();
+                                    minute = timePicker.getMinute();
+                                } else {
+                                    hourOfDay = timePicker.getCurrentHour();
+                                    minute = timePicker.getCurrentMinute();
+                                }
+                                String eventText = etEventText.getText().toString().trim();
+
+                                Calendar chosenCalendar = Calendar.getInstance();
+                                chosenCalendar.set(Calendar.YEAR, year);
+                                chosenCalendar.set(Calendar.MONTH, month);
+                                chosenCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+                                chosenCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                                chosenCalendar.set(Calendar.MINUTE, minute);
+                                chosenCalendar.set(Calendar.SECOND, 0);
+
+                                addEventToCalendar(chosenCalendar, eventText);
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .create().show();
+                },
+                now.get(Calendar.YEAR),
+                now.get(Calendar.MONTH),
+                now.get(Calendar.DAY_OF_MONTH)
+        );
+        datePicker.show();
+    }
+
     private String formatEmail(String email) {
         return email.replace("@", "_").replace(".", "_");
     }
@@ -205,7 +303,6 @@ public class Chat_Fragment extends Fragment {
     private void loadChatMessages() {
         Query messagesQuery = db.collection("chats").document(chatId)
                 .collection("messages").orderBy("timestamp", Query.Direction.ASCENDING);
-
         messagesQuery.addSnapshotListener((value, error) -> {
             if (error != null) {
                 Log.e("ChatFragment", "Error loading messages", error);
@@ -228,9 +325,44 @@ public class Chat_Fragment extends Fragment {
         });
     }
 
+    private void addEventToCalendar(Calendar startTime, String eventText) {
+        String title = !TextUtils.isEmpty(eventText) ? eventText : "Chat Appointment";
+        String description = "Chat appointment with " + userName;
+
+        Calendar endTime = (Calendar) startTime.clone();
+        endTime.add(Calendar.HOUR_OF_DAY, 1); // 1-hour duration
+
+        ContentResolver cr = requireContext().getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(CalendarContract.Events.CALENDAR_ID, 1); // Adjust if necessary.
+        values.put(CalendarContract.Events.TITLE, title);
+        values.put(CalendarContract.Events.DESCRIPTION, description);
+        values.put(CalendarContract.Events.DTSTART, startTime.getTimeInMillis());
+        values.put(CalendarContract.Events.DTEND, endTime.getTimeInMillis());
+        values.put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
+
+        try {
+            Uri eventUri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
+            if (eventUri != null) {
+                long eventID = Long.parseLong(eventUri.getLastPathSegment());
+
+                ContentValues reminderValues = new ContentValues();
+                reminderValues.put(CalendarContract.Reminders.EVENT_ID, eventID);
+                reminderValues.put(CalendarContract.Reminders.MINUTES, 60); // Reminder 1 hour before
+                reminderValues.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT);
+                cr.insert(CalendarContract.Reminders.CONTENT_URI, reminderValues);
+
+                Toast.makeText(requireContext(), "Event added to calendar", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(requireContext(), "Failed to add event", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void sendMessage(String text) {
         Map<String, Object> messageData = new HashMap<>();
-        messageData.put("sender", currentUserEmail);
+        messageData.put("sender", currentUserName);
         messageData.put("text", text);
         messageData.put("timestamp", FieldValue.serverTimestamp());
 
@@ -238,7 +370,7 @@ public class Chat_Fragment extends Fragment {
                 .collection("messages")
                 .add(messageData)
                 .addOnSuccessListener(documentReference -> {
-                    // Message sent successfully; snapshot listener will update the UI.
+                    // Message sent; snapshot listener will update the UI.
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Error sending message: " + e.getMessage(), Toast.LENGTH_SHORT).show()
@@ -251,7 +383,6 @@ public class Chat_Fragment extends Fragment {
 
     private void createChatIfNotExists() {
         DocumentReference chatRef = db.collection("chats").document(chatId);
-
         chatRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DocumentSnapshot document = task.getResult();
