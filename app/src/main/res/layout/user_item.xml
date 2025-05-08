@@ -20,7 +20,7 @@
         android:layout_marginBottom="40dp"
         android:background="@drawable/round_image"
         android:scaleType="centerCrop"
-        android:src="@drawable/home"
+        android:src="@drawable/default_profile"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tvName"
         app:layout_constraintStart_toStartOf="parent"

@@ -19,7 +19,7 @@
         android:layout_height="60dp"
         android:layout_marginStart="10dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/home"
+        android:src="@drawable/default_profile"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
