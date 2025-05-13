@@ -1,54 +1,48 @@
 package com.example.proconnect.models;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.IgnoreExtraProperties;
 
+import java.util.List;
+
+@IgnoreExtraProperties
 public class ChatModel {
     private String chatId;
     private String user1;
-    private String user2;
-    private Object createdAt; // Allows both Long and Timestamp
-    private String lastMessage; // Optional preview of last message
-    private Object lastMessageTimestamp; // New field for last message timestamp
+    private Object createdAt;                // Allows both Long and Timestamp
+    private String lastMessage;             // Optional preview of last message
+    private Object lastMessageTimestamp;    // Firestore field for last message time
+    private List<String> participants;      // New: array of user1 and otherUser
 
-    // Fields to store partner details loaded from Firestore
+    // Partner details loaded from Firestore
     private String otherUserName;
     private String otherUserImage;
     private String otherUserUid;
-    private String professional; // New field for professional
-    private String location;     // New field for location
-    private String languages;    // New field for languages
-    private String availability; // New field for availability
-    private Integer age;         // New field for age
+    private String professional;
+    private String location;
+    private String dob;
+    private String languages;
+    private String availability;
 
-    // No-argument constructor required by Firestore
     public ChatModel() { }
 
-    public ChatModel(String user1, String user2, Object createdAt, String lastMessage) {
-        this.user1 = user1;
-        this.user2 = user2;
-        this.createdAt = createdAt;
-        this.lastMessage = lastMessage;
-    }
-
-    // Getters and setters for existing fields...
+    // chatId
     public String getChatId() {
         return chatId;
     }
     public void setChatId(String chatId) {
         this.chatId = chatId;
     }
+
+    // user1 (current user)
     public String getUser1() {
         return user1;
     }
     public void setUser1(String user1) {
         this.user1 = user1;
     }
-    public String getUser2() {
-        return user2;
-    }
-    public void setUser2(String user2) {
-        this.user2 = user2;
-    }
+
+    // createdAt
     public Timestamp getCreatedAt() {
         if (createdAt instanceof Timestamp) {
             return (Timestamp) createdAt;
@@ -61,6 +55,8 @@ public class ChatModel {
     public void setCreatedAt(Object createdAt) {
         this.createdAt = createdAt;
     }
+
+    // lastMessage
     public String getLastMessage() {
         return lastMessage;
     }
@@ -68,7 +64,7 @@ public class ChatModel {
         this.lastMessage = lastMessage;
     }
 
-    // New getter and setter for lastMessageTimestamp
+    // lastMessageTimestamp
     public Timestamp getLastMessageTimestamp() {
         if (lastMessageTimestamp instanceof Timestamp) {
             return (Timestamp) lastMessageTimestamp;
@@ -82,53 +78,68 @@ public class ChatModel {
         this.lastMessageTimestamp = lastMessageTimestamp;
     }
 
-    // New getters and setters for additional fields
+    // participants
+    public List<String> getParticipants() {
+        return participants;
+    }
+    public void setParticipants(List<String> participants) {
+        this.participants = participants;
+    }
+
+    // Partner fields
     public String getOtherUserName() {
         return otherUserName;
     }
     public void setOtherUserName(String otherUserName) {
         this.otherUserName = otherUserName;
     }
+
     public String getOtherUserImage() {
         return otherUserImage;
     }
     public void setOtherUserImage(String otherUserImage) {
         this.otherUserImage = otherUserImage;
     }
+
     public String getOtherUserUid() {
         return otherUserUid;
     }
     public void setOtherUserUid(String otherUserUid) {
         this.otherUserUid = otherUserUid;
     }
+
     public String getProfessional() {
         return professional;
     }
     public void setProfessional(String professional) {
         this.professional = professional;
     }
+
     public String getLocation() {
         return location;
     }
     public void setLocation(String location) {
         this.location = location;
     }
+
+    public String getDob() {
+        return dob;
+    }
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+
     public String getLanguages() {
         return languages;
     }
     public void setLanguages(String languages) {
         this.languages = languages;
     }
+
     public String getAvailability() {
         return availability;
     }
     public void setAvailability(String availability) {
         this.availability = availability;
-    }
-    public Integer getAge() {
-        return age;
-    }
-    public void setAge(Integer age) {
-        this.age = age;
     }
 }

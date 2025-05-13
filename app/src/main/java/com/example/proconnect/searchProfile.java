@@ -25,7 +25,6 @@ import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.example.proconnect.adapters.ReviewsAdapter;
 import com.example.proconnect.models.ReviewModel;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -46,7 +45,7 @@ public class searchProfile extends Fragment {
     private String profession = "";
     private String location = "";
     private String userName = "";
-    private Integer age;
+    private Integer age = 0;
     private String languages = "";
     private String availability = "";
     private String dob;
@@ -81,7 +80,6 @@ public class searchProfile extends Fragment {
             location = args.getString("location", "None");
             userName = args.getString("userName", "Unknown User");
             profileImage = args.getString("profileImage", "");
-            age = args.getInt("age", 0);
             dob = args.getString("dob", "");
             languages = args.getString("languages", "Unknown Languages");
             availability = args.getString("availability", "None");
@@ -217,7 +215,6 @@ public class searchProfile extends Fragment {
         chatBundle.putString("userName", userName);
         chatBundle.putString("profession", profession);
         chatBundle.putString("location", location);
-        chatBundle.putInt("age", age);
         chatBundle.putString("dob", dob);
         chatBundle.putString("languages", languages);
         chatBundle.putString("availability", availability);

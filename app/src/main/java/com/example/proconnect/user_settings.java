@@ -164,7 +164,7 @@ public class user_settings extends Fragment {
                             double ratingsum = reviewDoc.getDouble("ratingsum");
                             int ratingcount = reviewDoc.getLong("ratingcount").intValue();
                             double rating = ratingsum / ratingcount;
-                            if (rating == 0) {
+                            if (rating == 0 || Double.isNaN(rating)) {
                                 textViewRating.setText("No Rating");
                             } else {
                                 textViewRating.setText("Rating: " + rating);

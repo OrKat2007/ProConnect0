@@ -11,6 +11,7 @@
         android:id="@+id/tvSender"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
         android:text="Sender"
         android:textSize="17dp"
         android:textStyle="bold" />
@@ -19,6 +20,7 @@
         android:id="@+id/tvMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
         android:textSize="17dp"
         android:text="Message content" />
 
@@ -26,6 +28,7 @@
         android:id="@+id/tvTimestamp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/black"
         android:text="Timestamp"
         android:textSize="12sp" />
 </LinearLayout>

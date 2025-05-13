@@ -17,29 +17,19 @@ import com.example.proconnect.models.ChatModel;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.DocumentSnapshot;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class chats extends Fragment {
-
     private FirebaseFirestore db;
     private RecyclerView chatsRecyclerView;
     private ChatsAdapter chatsAdapter;
     private List<ChatModel> chatsList;
     private String currentUserEmail;
-    private String dob;
-    private int age;
-    private String languages;
-    private String availability;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,135 +37,124 @@ public class chats extends Fragment {
         db = FirebaseFirestore.getInstance();
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    @Nullable @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_chats, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         chatsRecyclerView = view.findViewById(R.id.recyclerViewchats);
         chatsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        chatsList = new ArrayList<>();
+
+        chatsList    = new ArrayList<>();
         chatsAdapter = new ChatsAdapter(chatsList);
         chatsRecyclerView.setAdapter(chatsAdapter);
-
-        chatsAdapter.setOnChatClickListener(chat -> launchChatFragment(chat));
+        chatsAdapter.setOnChatClickListener(this::launchChatFragment);
 
         loadChats();
     }
 
     private void loadChats() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            currentUserEmail = formatEmail(currentUser.getEmail().toLowerCase());
-        } else {
-            Toast.makeText(getContext(), "User not authenticated", Toast.LENGTH_SHORT).show();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(getContext(),
+                    "User not authenticated", Toast.LENGTH_SHORT).show();
             return;
         }
+        currentUserEmail = user.getEmail().toLowerCase()
+                .replace("@","_").replace(".","_");
 
-        chatsList.clear();
+        db.collection("chats")
+                .whereArrayContains("participants", currentUserEmail)
+                .orderBy("LastMessageTimestamp", Query.Direction.DESCENDING)
+                .addSnapshotListener((snap, err) -> {
+                    if (err != null || snap == null) return;
 
-        Query query1 = db.collection("chats")
-                .whereEqualTo("user1", currentUserEmail)
-                .orderBy("createdAt", Query.Direction.DESCENDING);
+                    chatsList.clear();
+                    for (DocumentSnapshot doc : snap.getDocuments()) {
+                        ChatModel chat = doc.toObject(ChatModel.class);
+                        if (chat == null) continue;
+                        chat.setChatId(doc.getId());
 
-        Query query2 = db.collection("chats")
-                .whereEqualTo("user2", currentUserEmail)
-                .orderBy("createdAt", Query.Direction.DESCENDING);
+                        Timestamp ts = doc.getTimestamp("LastMessageTimestamp");
+                        chat.setLastMessageTimestamp(
+                                ts != null ? ts.toDate().getTime() : 0L
+                        );
 
-        query1.get().addOnCompleteListener(task -> handleChatQueryResult(task));
-        query2.get().addOnCompleteListener(task -> handleChatQueryResult(task));
-    }
+                        // Determine partner key from `participants` list
+                        List<String> parts = chat.getParticipants();
+                        String partner = parts.get(0).equals(currentUserEmail)
+                                ? parts.get(1)
+                                : parts.get(0);
 
-    private void handleChatQueryResult(com.google.android.gms.tasks.Task<com.google.firebase.firestore.QuerySnapshot> task) {
-        if (task.isSuccessful() && task.getResult() != null) {
-            for (DocumentSnapshot doc : task.getResult()) {
-                ChatModel chat = doc.toObject(ChatModel.class);
-                if (chat != null) {
-                    chat.setChatId(doc.getId());
-                    chat.setLastMessage(doc.getString("LastMessage"));
-                    Timestamp timestamp = doc.getTimestamp("LastMessageTimestamp");
-                    long lastMessageTimestamp = (timestamp != null) ? timestamp.toDate().getTime() : 0;
-                    chat.setLastMessageTimestamp(lastMessageTimestamp);
+                        // Load partner profile; if missing, show "(deleted)"
+                        db.collection("users").document(partner)
+                                .get()
+                                .addOnSuccessListener(ds -> {
+                                    if (ds.exists()) {
+                                        chat.setOtherUserUid(partner);
+                                        chat.setOtherUserName(ds.getString("name"));
+                                        chat.setOtherUserImage(ds.getString("profileImage"));
+                                        chat.setProfessional(ds.getString("profession"));
+                                        chat.setLocation(ds.getString("location"));
+                                        chat.setDob(ds.getString("dob"));
+                                        chat.setAvailability(ds.getString("availability"));
+                                        chat.setLanguages(ds.getString("languages"));
+                                    } else {
+                                        // user doc was deleted → display fallback
+                                        chat.setOtherUserUid(partner);
+                                        chat.setOtherUserName(partner + " (deleted)");
+                                        chat.setOtherUserImage(null);
+                                        chat.setProfessional("");
+                                        chat.setLocation("");
+                                        chat.setDob("");
+                                        chat.setAvailability("");
+                                        chat.setLanguages("");
+                                    }
+                                    chatsAdapter.notifyDataSetChanged();
+                                })
+                                .addOnFailureListener(e -> {
+                                    // network / permission error → also show deleted fallback
+                                    chat.setOtherUserUid(partner);
+                                    chat.setOtherUserName(partner + " (deleted)");
+                                    chatsAdapter.notifyDataSetChanged();
+                                });
 
-                    String partnerEmail = chat.getUser1().equals(currentUserEmail)
-                            ? chat.getUser2() : chat.getUser1();
-
-                    loadUserData(partnerEmail, (profileImage, uid, profession, location, realName) -> {
-                        chat.setOtherUserName((realName != null && !realName.isEmpty()) ? realName : partnerEmail);
-                        chat.setOtherUserImage((profileImage != null) ? profileImage : "");
-                        chat.setOtherUserUid((uid != null) ? uid : "");
-                        chat.setProfessional((profession != null) ? profession : "");
-                        chat.setLocation((location != null) ? location : "");
-                        chatsAdapter.notifyDataSetChanged();
-                    });
-
-                    chatsList.add(chat);
-                }
-            }
-            chatsAdapter.updateChats(chatsList);
-        }
-    }
-
-    private String formatEmail(String email) {
-        return email.replace("@", "_").replace(".", "_").toLowerCase();
+                        chatsList.add(chat);
+                    }
+                    chatsAdapter.updateChats(chatsList);
+                });
     }
 
     private void launchChatFragment(ChatModel chat) {
-        if(chat.getOtherUserName().equals("Deleted User")){
-            Toast.makeText(getContext(), "User is deleted", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Bundle bundle = new Bundle();
-        bundle.putString("chatId", chat.getChatId());
-        String partnerEmail = chat.getUser1().equals(currentUserEmail)
-                ? chat.getUser2() : chat.getUser1();
-        bundle.putString("chatPartnerEmail", partnerEmail);
-        bundle.putString("chatPartnerImage", chat.getOtherUserImage());
-        bundle.putString("userName", chat.getOtherUserName());
-        bundle.putString("chatPartnerUid", chat.getOtherUserUid());
-        bundle.putString("profession", chat.getProfessional());
-        bundle.putString("location", chat.getLocation());
-        bundle.putString("dob", (dob != null ? dob : ""));
-        bundle.putInt("age", age);
-        bundle.putString("languages", (languages != null ? languages : ""));
-        bundle.putString("availability", (availability != null ? availability : ""));
+        Bundle b = new Bundle();
+        b.putString("chatId", chat.getChatId());
+        b.putString("chatPartnerUid", chat.getOtherUserUid());
+        b.putString("chatPartnerImage", chat.getOtherUserImage());
+        b.putString("userName", chat.getOtherUserName());
+        b.putString("profession", chat.getProfessional());
+        b.putString("location", chat.getLocation());
+        b.putString("dob", chat.getDob());
+        b.putString("languages", chat.getLanguages());
+        b.putString("availability", chat.getAvailability());
+        // mark fragment state if partner was deleted
+        b.putBoolean("isUserDeleted",
+                chat.getOtherUserName().endsWith("(deleted)")
+        );
 
-        Chat_Fragment chatFragment = new Chat_Fragment();
-        chatFragment.setArguments(bundle);
-
+        Chat_Fragment frag = new Chat_Fragment();
+        frag.setArguments(b);
         if (getActivity() != null) {
-            getActivity().getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.frame_layout, chatFragment)
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, frag)
                     .addToBackStack(null)
                     .commit();
         }
-    }
-
-    private void loadUserData(String email, OnUserDataLoadedListener listener) {
-        db.collection("users").document(email).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String profileImage = documentSnapshot.getString("profileImage");
-                        String uid = documentSnapshot.getString("uid");
-                        String profession = documentSnapshot.getString("profession");
-                        String location = documentSnapshot.getString("location");
-                        dob = documentSnapshot.getString("dob");
-                        languages = documentSnapshot.getString("languages");
-                        availability = documentSnapshot.getString("availability");
-                        String realName = documentSnapshot.getString("name");
-                        listener.onUserDataLoaded(profileImage, uid, profession, location, realName);
-                    } else {
-                        listener.onUserDataLoaded("", "", "", "", "Deleted User");
-                    }
-                })
-                .addOnFailureListener(e -> listener.onUserDataLoaded("", "", "", "", "Deleted User"));
-    }
-
-    private interface OnUserDataLoadedListener {
-        void onUserDataLoaded(String profileImage, String uid, String profession, String location, String userName);
     }
 }

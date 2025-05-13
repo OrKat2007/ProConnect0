@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:textColor="@color/black"
             android:fontFamily="sans-serif-medium"
-            android:textSize="40dp"
+            android:textSize="30dp"
             android:text="TextView" />
     </LinearLayout>
 
