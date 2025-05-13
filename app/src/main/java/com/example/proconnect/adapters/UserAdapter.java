@@ -43,9 +43,9 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Inflate the layout for each item (user_item.xml)
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.user_item, parent, false);
-        return new ViewHolder(view); // Return the ViewHolder with the view
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.user_item, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         holder.tvProfession.setText(user.getProfession());
         holder.tvAvailability.setText("Availability: " + user.getAvailability());
 
-        // Set the profile image using Glide with CircleCrop
+        // Profile image
         if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
             try {
                 byte[] decodedString = Base64.decode(user.getProfileImage(), Base64.DEFAULT);
@@ -76,32 +76,30 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
             holder.ivProfile.setImageResource(R.drawable.default_profile);
         }
 
-        // Fetch rating information from the reviews collection
-        fetchRatingFromReviews(user.getUid(), holder.ratingBar);
+        // Fetch rating sum/count and set both RatingBar and RatingCount TextView
+        fetchRatingFromReviews(user.getUid(), holder.ratingBar, holder.tvRatingCount);
 
-        // Handle item click to navigate to the profile fragment
+        // Item click → profile page
         holder.itemView.setOnClickListener(v -> {
             searchProfile profileFragment = new searchProfile();
-            Bundle bundleUserAdapter = new Bundle();
-            String formattedEmail = user.getEmail().toLowerCase().replace("@", "_").replace(".", "_");
-            bundleUserAdapter.putString("uid", formattedEmail);
-            bundleUserAdapter.putString("userName", user.getName());
-            bundleUserAdapter.putString("profession", user.getProfession());
-            bundleUserAdapter.putString("location", user.getLocation());
-            bundleUserAdapter.putString("dob", user.getDob());
-            bundleUserAdapter.putString("profileImage", user.getProfileImage());
-            bundleUserAdapter.putInt("age", user.getAge());
-            bundleUserAdapter.putString("languages", user.getLanguages());
-            bundleUserAdapter.putString("availability", user.getAvailability());
-
-            profileFragment.setArguments(bundleUserAdapter);
+            Bundle bundle = new Bundle();
+            bundle.putString("uid", user.getUid());
+            bundle.putString("userName", user.getName());
+            bundle.putString("profession", user.getProfession());
+            bundle.putString("location", user.getLocation());
+            bundle.putString("dob", user.getDob());
+            bundle.putString("profileImage", user.getProfileImage());
+            bundle.putInt("age", user.getAge());
+            bundle.putString("languages", user.getLanguages());
+            bundle.putString("availability", user.getAvailability());
+            profileFragment.setArguments(bundle);
 
             if (context instanceof AppCompatActivity) {
                 AppCompatActivity activity = (AppCompatActivity) context;
-                FragmentTransaction transaction = activity.getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.frame_layout, profileFragment); // Replace the fragment
-                transaction.addToBackStack(null); // Optional: Add to backstack for navigation
-                transaction.commit();
+                FragmentTransaction ft = activity.getSupportFragmentManager().beginTransaction();
+                ft.replace(R.id.frame_layout, profileFragment);
+                ft.addToBackStack(null);
+                ft.commit();
             }
         });
     }
@@ -111,56 +109,41 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         return userList.size();
     }
 
-    private void fetchRatingFromReviews(String userId, RatingBar ratingBar) {
-        // Ensure ratingBar is not null
-        if (ratingBar == null) {
-            return; // Exit if RatingBar is not available
-        }
+    private void fetchRatingFromReviews(String userId,
+                                        RatingBar ratingBar,
+                                        TextView ratingCountTextView) {
+        if (ratingBar == null || ratingCountTextView == null) return;
 
-        DocumentReference reviewDocRef = firestore.collection("reviews").document(userId);
-
-        reviewDocRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                if (task.getResult() != null && task.getResult().exists()) {
-                    float ratingSum = task.getResult().getDouble("ratingsum").floatValue();
-                    int ratingCount = task.getResult().getLong("ratingcount").intValue();
-                    if (ratingCount > 0) {
-                        float rating = ratingSum / ratingCount;
-                        ratingBar.setRating(rating);
-                    } else {
-                        ratingBar.setRating(0);
-                    }
-                } else {
-                    // Document doesn't exist yet, so set default rating.
-                    ratingBar.setRating(0);
-                }
+        DocumentReference reviewRef = firestore.collection("reviews").document(userId);
+        reviewRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null && task.getResult().exists()) {
+                double sum = task.getResult().getDouble("ratingsum");
+                int count = task.getResult().getLong("ratingcount").intValue();
+                float avg = (count > 0 ? (float)(sum / count) : 0f);
+                ratingBar.setRating(avg);
+                ratingCountTextView.setText("Amount of ratings: " + count);
             } else {
-                Toast.makeText(context, "Failed to fetch rating", Toast.LENGTH_SHORT).show();
+                ratingBar.setRating(0f);
+                ratingCountTextView.setText("Amount of ratings: 0");
             }
+        }).addOnFailureListener(e -> {
+            Toast.makeText(context, "Failed to fetch rating", Toast.LENGTH_SHORT).show();
         });
-
     }
 
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvProfession, tvAvailability;
+        TextView tvName, tvProfession, tvAvailability, tvRatingCount;
         ImageView ivProfile;
         RatingBar ratingBar;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvName = itemView.findViewById(R.id.tvName);
-            tvProfession = itemView.findViewById(R.id.tvProfession);
-            ivProfile = itemView.findViewById(R.id.ivProfile);
-            ratingBar = itemView.findViewById(R.id.ratingBar2);
-            tvAvailability = itemView.findViewById(R.id.tvAvailability);
-
+            tvName           = itemView.findViewById(R.id.tvName);
+            tvProfession     = itemView.findViewById(R.id.tvProfession);
+            ivProfile        = itemView.findViewById(R.id.ivProfile);
+            ratingBar        = itemView.findViewById(R.id.ratingBar2);
+            tvAvailability   = itemView.findViewById(R.id.tvAvailability);
+            tvRatingCount    = itemView.findViewById(R.id.tvRatingCount);
         }
-    }
-
-    // Update list when search happens
-    public void updateList(List<UserModel> newList) {
-        userList = newList;
-        notifyDataSetChanged();
     }
 }

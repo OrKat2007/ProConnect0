@@ -40,7 +40,7 @@
             android:enabled="true"
             android:exported="true"></receiver>
         <receiver
-            android:name=".MyReceiver"
+            android:name=".BatteryReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

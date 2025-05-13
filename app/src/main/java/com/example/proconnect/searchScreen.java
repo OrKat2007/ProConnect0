@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,6 +19,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class searchScreen extends Fragment {
@@ -34,56 +37,75 @@ public class searchScreen extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_search_screen, container, false);
 
-        etSearch = view.findViewById(R.id.etSearch);
-        recyclerView = view.findViewById(R.id.recyclerView);
+        etSearch    = view.findViewById(R.id.etSearch);
+        recyclerView= view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        firestore = FirebaseFirestore.getInstance();
-        userList = new ArrayList<>();
+        firestore   = FirebaseFirestore.getInstance();
+        userList    = new ArrayList<>();
         userAdapter = new UserAdapter(userList, getContext());
         recyclerView.setAdapter(userAdapter);
 
-        // Search in real-time
         etSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
+            @Override public void afterTextChanged(Editable s) {}
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public void onTextChanged(CharSequence s, int st, int b, int c) {
                 searchProfessionals(s.toString());
             }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
         });
 
         return view;
     }
 
     private void searchProfessionals(String query) {
+        // 1) Fetch all professionals
         firestore.collection("users")
-                .whereEqualTo("professional", true) // Only fetch professionals
+                .whereEqualTo("professional", true)
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && task.getResult() != null) {
-                        userList.clear();
+                .addOnSuccessListener(snapshot -> {
+                    userList.clear();
+                    for (QueryDocumentSnapshot document : snapshot) {
+                        String prof = document.getString("profession");
+                        if (prof != null && prof.toLowerCase().contains(query.toLowerCase())) {
+                            UserModel user = document.toObject(UserModel.class);
+                            user.setProfession(prof);
+                            user.setLocation(document.getString("location"));
+                            user.setProfileImage(document.getString("profileImage"));
 
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            String profession = document.getString("profession");
-                            if (profession != null && profession.toLowerCase().contains(query.toLowerCase())) {
-                                UserModel user = document.toObject(UserModel.class);
-
-                                // Ensure fields are properly assigned
-                                user.setProfession(profession);
-                                user.setLocation(document.getString("location"));
-                                user.setProfileImage(document.getString("profileImage"));
-
-                                userList.add(user);
-                            }
+                            String uid = document.getId();
+                            // 2) Fetch review data for rating & count
+                            firestore.collection("reviews").document(uid)
+                                    .get()
+                                    .addOnSuccessListener(revDoc -> {
+                                        if (revDoc.exists()) {
+                                            double sum   = revDoc.getDouble("ratingsum");
+                                            long count   = revDoc.getLong("ratingcount");
+                                            double avg   = count > 0 ? sum/count : 0;
+                                            user.setAverageRating(avg);
+                                            user.setRatingCount((int) count);
+                                        } else {
+                                            user.setAverageRating(0);
+                                            user.setRatingCount(0);
+                                        }
+                                        // add and sort by rating desc, then count desc
+                                        userList.add(user);
+                                        Collections.sort(userList, new Comparator<UserModel>() {
+                                            @Override
+                                            public int compare(UserModel u1, UserModel u2) {
+                                                int cmp = Double.compare(u2.getAverageRating(), u1.getAverageRating());
+                                                if (cmp != 0) return cmp;
+                                                return Long.compare(u2.getRatingCount(), u1.getRatingCount());
+                                            }
+                                        });
+                                        userAdapter.notifyDataSetChanged();
+                                    })
+                                    .addOnFailureListener(e -> Toast.makeText(getContext(),
+                                            "Error loading reviews for " + uid, Toast.LENGTH_SHORT).show());
                         }
-
-                        userAdapter.notifyDataSetChanged();
                     }
-                });
+                })
+                .addOnFailureListener(e -> Toast.makeText(getContext(),
+                        "Error loading professionals", Toast.LENGTH_SHORT).show());
     }
 }

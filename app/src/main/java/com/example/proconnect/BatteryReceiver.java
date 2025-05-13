@@ -7,12 +7,12 @@ import android.os.BatteryManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MyReceiver extends BroadcastReceiver {
+public class BatteryReceiver extends BroadcastReceiver {
 
     private TextView tv;
 
     // Constructor receives a TextView reference so we can update it.
-    public MyReceiver(TextView tv) {
+    public BatteryReceiver(TextView tv) {
         this.tv = tv;
     }
 

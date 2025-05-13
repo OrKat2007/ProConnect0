@@ -88,6 +88,7 @@
         android:id="@+id/etAgebtn"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
+        android:layout_marginStart="30dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="24dp"
         android:backgroundTint="@color/cyan"
@@ -98,21 +99,22 @@
         android:textColorHint="@color/white"
         android:textSize="15dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/birthdatetv"
         app:layout_constraintTop_toBottomOf="@+id/spinnerLanguage" />
 
     <TextView
         android:id="@+id/birthdatetv"
         android:layout_width="230dp"
         android:layout_height="55dp"
-        android:layout_marginStart="68dp"
+        android:layout_marginStart="52dp"
         android:layout_marginTop="20dp"
         android:background="@drawable/gray_rectengle"
+        android:fontFamily="sans-serif-black"
         android:gravity="left|center"
         android:paddingLeft="30dp"
-        android:fontFamily="sans-serif-black"
-        android:textSize="17dp"
-        android:textColor="@color/black"
         android:text="Birthdate: "
+        android:textColor="@color/black"
+        android:textSize="17dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/spinnerLanguage" />
 
@@ -149,6 +151,7 @@
         android:id="@+id/btnUser"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
+        android:layout_marginStart="30dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="71dp"
         android:backgroundTint="@color/cyan"
@@ -157,6 +160,7 @@
         android:textColor="@color/white"
         android:textSize="17dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnPro"
         app:layout_constraintTop_toBottomOf="@+id/etAgebtn" />
 
     <!-- Sign Up -->

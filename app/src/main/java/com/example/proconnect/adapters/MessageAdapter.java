@@ -36,7 +36,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         MessageModel message = messageList.get(position);
         holder.tvMessage.setText(message.getText());
 
-        // Format timestamp to a human-readable string
+        // change timestamp to normal date
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
         if (message.getTimestamp() != null) {
             holder.tvTimestamp.setText(sdf.format(message.getTimestamp().toDate()));
@@ -46,11 +46,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
         // Check if the message was sent by the current user by comparing sender names
         if (message.getSender().equals(currentUserName)) {
-            // For sent messages, align the message container to the right
+            // For sent messages, align the message to the right
             holder.messageContainer.setGravity(Gravity.END);
             holder.tvSender.setText("You");
         } else {
-            // For received messages, align the container to the left
+            // For received messages, align the message to the left
             holder.messageContainer.setGravity(Gravity.START);
             holder.tvSender.setText(message.getSender());
         }

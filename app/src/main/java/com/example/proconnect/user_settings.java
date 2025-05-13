@@ -1,7 +1,6 @@
 package com.example.proconnect;
 
 import static androidx.core.content.ContextCompat.registerReceiver;
-import static java.security.AccessController.getContext;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -67,9 +66,6 @@ public class user_settings extends Fragment {
 
     // Save and Delete buttons
     private Button btnSave, btnDelete;
-
-    private MyReceiver batteryReceiver;   // keep a reference
-    private TextView tvBatteryInfo;                 // for the battery text
 
     // Define your popular languages for selection
     private final String[] languagesArray = {"Hebrew", "English", "Russian", "Spanish", "French", "German", "Chinese", "Italian", "Portuguese", "Japanese"};

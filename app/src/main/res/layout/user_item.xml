@@ -63,6 +63,17 @@
         app:layout_constraintStart_toEndOf="@+id/ivProfile"
         app:layout_constraintTop_toBottomOf="@+id/tvProfession" />
 
+    <TextView
+        android:id="@+id/tvRatingCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:textSize="14sp"
+        android:text="Amount of ratings: "
+        app:layout_constraintStart_toEndOf="@+id/ivProfile"
+        app:layout_constraintTop_toBottomOf="@+id/tvAvailability" />
+
     <RatingBar
         android:id="@+id/ratingBar2"
         android:layout_width="wrap_content"
@@ -72,6 +83,6 @@
         android:isIndicator="true"
         android:progressTint="@color/gold"
         app:layout_constraintStart_toEndOf="@+id/ivProfile"
-        app:layout_constraintTop_toBottomOf="@+id/tvAvailability" />
+        app:layout_constraintTop_toBottomOf="@+id/tvRatingCount" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
