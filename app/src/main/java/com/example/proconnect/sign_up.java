@@ -2,8 +2,11 @@ package com.example.proconnect;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,18 +20,28 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import com.example.proconnect.models.UserModel;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import android.Manifest;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
 
 public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
@@ -36,6 +49,11 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
     private Button back, signup, probtn, userbtn, ageButton;
     private TextView birthdateTextView;
     private Spinner spinnerLanguage;  // Use this instead of an EditText
+
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+    private FusedLocationProviderClient fusedLocationClient;
+    private boolean userTypeSelected = false;
+
 
     private boolean isPro = false;
     private FirebaseAuth mAuth;
@@ -58,6 +76,9 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
         mAuth = FirebaseAuth.getInstance();
         firestore = FirebaseFirestore.getInstance();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+
 
         etusername = findViewById(R.id.etUserName);
         etpassword = findViewById(R.id.etPassWord);
@@ -101,11 +122,13 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         }
         if (v == probtn) {
             isPro = true;
+            userTypeSelected = true;
             updateButtonColors();
             showProfessionalDialog();
         }
         if (v == userbtn) {
             isPro = false;
+            userTypeSelected = true;
             updateButtonColors();
             proProfession = "";
             proLocation = "";
@@ -150,7 +173,6 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
 
     private void showProfessionalDialog() {
-        // Your existing code to show the professional details dialog...
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_professional_details, null);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(dialogView);
@@ -158,22 +180,61 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
 
         final EditText etDialogProfession = dialogView.findViewById(R.id.etDialogProfession);
         final EditText etDialogLocation = dialogView.findViewById(R.id.etDialogLocation);
+        etDialogLocation.setEnabled(false); // Disable manual editing
         final EditText etDialogAvailability = dialogView.findViewById(R.id.etDialogAvailability);
         Button btnDialogOk = dialogView.findViewById(R.id.btnDialogOk);
+        Button btnGetLocation = dialogView.findViewById(R.id.btnGetLocation); // Ensure this exists in your layout
+
+        btnGetLocation.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(sign_up.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(sign_up.this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            } else {
+                fusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(location -> {
+                            if (location != null) {
+                                Geocoder geocoder = new Geocoder(sign_up.this, Locale.ENGLISH);
+                                try {
+                                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                                    if (!addresses.isEmpty()) {
+                                        String city = addresses.get(0).getLocality();
+                                        etDialogLocation.setText(city);
+                                        proLocation = city;
+                                    } else {
+                                        Toast.makeText(sign_up.this, "City not found", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    Toast.makeText(sign_up.this, "Geocoder error", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(sign_up.this, "Location is null", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(sign_up.this, "Location failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+            }
+        });
 
         btnDialogOk.setOnClickListener(view -> {
             proProfession = etDialogProfession.getText().toString().trim();
             proLocation = etDialogLocation.getText().toString().trim();
             String rawAvailability = etDialogAvailability.getText().toString().trim();
             proAvailability = normalizeAvailability(rawAvailability);
+
             if (proProfession.isEmpty() || proLocation.isEmpty() || proAvailability.isEmpty()) {
                 Toast.makeText(sign_up.this, "Please fill all professional fields", Toast.LENGTH_SHORT).show();
             } else {
                 dialog.dismiss();
             }
         });
+
         dialog.show();
     }
+
 
     // Show a multi-choice dialog for language selection
     private void showLanguageMultiSelectDialog() {
@@ -210,22 +271,42 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         String name = etusername.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String password = etpassword.getText().toString().trim();
-        // Retrieve the selected languages from the spinner's adapter
         String normalizedLanguages = spinnerLanguage.getSelectedItem() != null ? spinnerLanguage.getSelectedItem().toString() : "";
+        // check if pro or normal is clicked
+        if (!userTypeSelected) {
+            Toast.makeText(this, "Please choose: Are you a Professional or a Normal user?", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+
+        //Basic field checks
+        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        //Birthdate check
         if (selectedDob.isEmpty()) {
             Toast.makeText(this, "Please select your birthdate", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (name.isEmpty() || email.isEmpty() || password.isEmpty() || normalizedLanguages.isEmpty() || normalizedLanguages.equals("Select Languages")) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+        //Language selection check
+        if (normalizedLanguages.isEmpty() || normalizedLanguages.equals("Select Languages")) {
+            Toast.makeText(this, "Please select at least one language", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        //Professional info check
         if (isPro && (proProfession.isEmpty() || proLocation.isEmpty() || proAvailability.isEmpty())) {
             Toast.makeText(this, "Please fill professional details", Toast.LENGTH_SHORT).show();
             showProfessionalDialog();
+            return;
+        }
+
+        // password saftey check
+        if (password.length() < 6) {
+            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -241,7 +322,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                                 if (task1.isSuccessful()) {
                                     saveUserToFirestore(user.getEmail(), name, email, normalizedLanguages);
                                 } else {
-                                    Toast.makeText(sign_up.this, "Failed to save name", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(sign_up.this, "Failed to update profile", Toast.LENGTH_LONG).show();
                                 }
                             });
                         }
@@ -250,6 +331,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
                     }
                 });
     }
+
 
     private void saveUserToFirestore(String safeEmail, String name, String email, String languages) {
         String formattedEmail = email.toLowerCase().replace("@", "_").replace(".", "_");

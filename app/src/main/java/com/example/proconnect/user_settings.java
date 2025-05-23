@@ -1,7 +1,5 @@
 package com.example.proconnect;
 
-import static androidx.core.content.ContextCompat.registerReceiver;
-
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -10,6 +8,8 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Bundle;
@@ -34,6 +34,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.proconnect.models.UserModel;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -45,6 +47,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -52,30 +55,26 @@ public class user_settings extends Fragment {
 
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
     private static final int GALLERY = 1, CAMERA = 2;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     private ImageButton profileImage;
-    private TextView username, tvLocation, tvAvailability;
-    private Button logout;
-    private FirebaseFirestore firestore;
-
-    // Non-editable fields remain as TextViews
     private TextView userName, textViewAge, textViewRating, textViewProfession;
-    // Editable fields to update settings (languages now uses a Spinner)
+    private TextView tvLocation, tvAvailability, tvshowLocation;
     private Spinner spinnerLanguage;
-    private EditText etLocation, etAvailability;
-
-    // Save and Delete buttons
+    private EditText etAvailability;
     private Button btnSave, btnDelete;
 
-    // Define your popular languages for selection
+    private FirebaseFirestore firestore;
+    private FusedLocationProviderClient fusedLocationClient;
+
     private final String[] languagesArray = {"Hebrew", "English", "Russian", "Spanish", "French", "German", "Chinese", "Italian", "Portuguese", "Japanese"};
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_settings, container, false);
 
         firestore = FirebaseFirestore.getInstance();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
         FirebaseAuth auth = FirebaseAuth.getInstance();
         String userId = auth.getCurrentUser().getEmail().toLowerCase().replace("@", "_").replace(".", "_");
 
@@ -83,26 +82,21 @@ public class user_settings extends Fragment {
         btnSave = view.findViewById(R.id.btnSave);
         btnDelete = view.findViewById(R.id.btnDelete);
         Button logout = view.findViewById(R.id.btnLogOut);
+        Button btnUpdateLocation = view.findViewById(R.id.btnUpdateLocation);
 
-        // Non-editable fields
         userName = view.findViewById(R.id.userName);
         textViewAge = view.findViewById(R.id.textViewAge);
         textViewRating = view.findViewById(R.id.textViewRating);
         textViewProfession = view.findViewById(R.id.textViewProfession);
         tvLocation = view.findViewById(R.id.tvLocation);
         tvAvailability = view.findViewById(R.id.tvAvailability);
+        tvshowLocation = view.findViewById(R.id.tvshowLocation);
 
-        // Editable fields for updating settings
         spinnerLanguage = view.findViewById(R.id.textViewLanguages);
-        etLocation = view.findViewById(R.id.etLocation);
         etAvailability = view.findViewById(R.id.editTextAvailability);
 
         FirebaseUser currentUser = auth.getCurrentUser();
-        if (currentUser != null && currentUser.getDisplayName() != null) {
-            userName.setText(currentUser.getDisplayName());
-        } else {
-            userName.setText("Unknown User");
-        }
+        userName.setText(currentUser != null && currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "Unknown User");
 
         profileImage.setOnClickListener(v -> showPictureDialog());
         profileImage.setVisibility(View.INVISIBLE);
@@ -110,49 +104,44 @@ public class user_settings extends Fragment {
 
         logout.setOnClickListener(v -> {
             auth.signOut();
-            Intent intent = new Intent(getActivity(), login_screen.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            startActivity(new Intent(getActivity(), login_screen.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK));
             getActivity().finish();
         });
 
         btnSave.setOnClickListener(v -> saveUpdatedUserFields());
-
-        // Set up the multi-select spinner for languages:
+        btnDelete.setOnClickListener(v -> showDeleteUserDialog(userId));
         setupLanguageSpinner();
 
-        // Set up the delete button with a custom dialog.
-        btnDelete.setOnClickListener(v -> showDeleteUserDialog(userId));
+        btnUpdateLocation.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+            } else {
+                fetchAndUpdateLocation();
+            }
+        });
 
         firestore.collection("users").document(userId).get().addOnSuccessListener(document -> {
             if (document.exists()) {
                 textViewProfession.setText("Profession: " + document.getString("profession"));
                 String dob = document.getString("dob");
-                if (dob != null && !dob.isEmpty()) {
-                    int calculatedAge = calculateAge(dob);
-                    textViewAge.setText("Age: " + calculatedAge);
-                } else {
-                    textViewAge.setText("Age: N/A");
-                }
-                etLocation.setText(document.getString("location"));
-                // Update the language spinner adapter with the saved languages
+                textViewAge.setText("Age: " + (dob != null ? calculateAge(dob) : "N/A"));
+                tvshowLocation.setText(document.getString("location"));
+
                 String languages = document.getString("languages");
                 if (!TextUtils.isEmpty(languages)) {
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-                            android.R.layout.simple_spinner_item, new String[]{languages});
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spinnerLanguage.setAdapter(adapter);
+                    spinnerLanguage.setAdapter(new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, new String[]{languages}));
                 }
 
-                boolean isPro = document.getBoolean("professional") != null && document.getBoolean("professional");
+                boolean isPro = Boolean.TRUE.equals(document.getBoolean("professional"));
                 if (isPro) {
                     textViewProfession.setVisibility(View.VISIBLE);
                     etAvailability.setVisibility(View.VISIBLE);
                     textViewRating.setVisibility(View.VISIBLE);
-                    etLocation.setVisibility(View.VISIBLE);
                     spinnerLanguage.setVisibility(View.VISIBLE);
                     tvLocation.setVisibility(View.VISIBLE);
                     tvAvailability.setVisibility(View.VISIBLE);
+                    tvshowLocation.setVisibility(View.VISIBLE);
                     etAvailability.setText(document.getString("availability"));
 
                     firestore.collection("reviews").document(userId).get().addOnSuccessListener(reviewDoc -> {
@@ -160,20 +149,62 @@ public class user_settings extends Fragment {
                             double ratingsum = reviewDoc.getDouble("ratingsum");
                             int ratingcount = reviewDoc.getLong("ratingcount").intValue();
                             double rating = ratingsum / ratingcount;
-                            if (rating == 0 || Double.isNaN(rating)) {
-                                textViewRating.setText("No Rating");
-                            } else {
-                                textViewRating.setText("Rating: " + rating);
-                            }
+                            textViewRating.setText(rating == 0 || Double.isNaN(rating) ? "No Rating" : "Rating: " + rating);
                         }
                     });
                 }
             }
         });
 
-
         return view;
     }
+
+    private void fetchAndUpdateLocation() {
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        Geocoder geocoder = new Geocoder(getContext(), Locale.ENGLISH);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                            if (!addresses.isEmpty()) {
+                                String city = addresses.get(0).getLocality();
+                                tvshowLocation.setText(city);
+                                Toast.makeText(getContext(), "Location updated: " + city, Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (IOException e) {
+                            Toast.makeText(getContext(), "Geocoder error", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Location is null", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> Toast.makeText(getContext(), "Location failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+    private void saveUpdatedUserFields() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+        String email = user.getEmail();
+        String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
+
+        String newLanguages = spinnerLanguage.getSelectedItem().toString().trim();
+        String newLocation = tvshowLocation.getText().toString();
+        String newAvailability = etAvailability.getText().toString().trim();
+
+        newLanguages = normalizeLanguages(newLanguages);
+        newAvailability = normalizeAvailability(newAvailability);
+
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("languages", newLanguages);
+        updateData.put("location", newLocation);
+        updateData.put("availability", newAvailability);
+
+        firestore.collection("users").document(safeEmail)
+                .update(updateData)
+                .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Settings updated!", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update settings: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
 
     private int getBatteryPercentage(Context context) {
         Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -427,31 +458,6 @@ public class user_settings extends Fragment {
             } catch (NumberFormatException e) { }
         }
         return start + "-" + end;
-    }
-
-    // Save updated editable fields (languages, location, availability) to Firestore.
-    private void saveUpdatedUserFields() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
-        String email = user.getEmail();
-        String safeEmail = email.toLowerCase().replace("@", "_").replace(".", "_");
-
-        String newLanguages = spinnerLanguage.getSelectedItem().toString().trim();
-        String newLocation = etLocation.getText().toString().trim();
-        String newAvailability = etAvailability.getText().toString().trim();
-
-        newLanguages = normalizeLanguages(newLanguages);
-        newAvailability = normalizeAvailability(newAvailability);
-
-        Map<String, Object> updateData = new HashMap<>();
-        updateData.put("languages", newLanguages);
-        updateData.put("location", newLocation);
-        updateData.put("availability", newAvailability);
-
-        firestore.collection("users").document(safeEmail)
-                .update(updateData)
-                .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Settings updated!", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update settings: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     // Show a custom dialog to confirm user deletion.

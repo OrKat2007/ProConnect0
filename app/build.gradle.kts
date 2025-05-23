@@ -47,6 +47,8 @@ dependencies {
     implementation ("com.firebaseui:firebase-ui-firestore:8.0.2")
     implementation ("com.github.bumptech.glide:glide:4.15.1")
     implementation ("androidx.core:core:1.9.0")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+
     annotationProcessor ("com.github.bu" + "mptech.glide:compiler:4.15.1")
 
 
