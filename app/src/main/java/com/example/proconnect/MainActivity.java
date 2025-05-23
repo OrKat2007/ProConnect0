@@ -1,5 +1,7 @@
 package com.example.proconnect;
 
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -10,6 +12,7 @@ import com.example.proconnect.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding binding;
+    private NetworkChangeReceiver networkChangeReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +34,25 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        networkChangeReceiver = new NetworkChangeReceiver(isConnected -> {
+            if (!isConnected) {
+                DialogNoInternet.showNoInternetDialog(this);
+            }
+        });
+        registerReceiver(networkChangeReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (networkChangeReceiver != null) {
+            unregisterReceiver(networkChangeReceiver);
+        }
     }
 
     private void loadFragment(Fragment fragment) {
