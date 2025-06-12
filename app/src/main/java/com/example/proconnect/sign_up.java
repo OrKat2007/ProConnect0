@@ -183,7 +183,7 @@ public class sign_up extends AppCompatActivity implements View.OnClickListener {
         etDialogLocation.setEnabled(false); // Disable manual editing
         final EditText etDialogAvailability = dialogView.findViewById(R.id.etDialogAvailability);
         Button btnDialogOk = dialogView.findViewById(R.id.btnDialogOk);
-        Button btnGetLocation = dialogView.findViewById(R.id.btnGetLocation); // Ensure this exists in your layout
+        Button btnGetLocation = dialogView.findViewById(R.id.btnGetLocation);
 
         btnGetLocation.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(sign_up.this, Manifest.permission.ACCESS_FINE_LOCATION)
